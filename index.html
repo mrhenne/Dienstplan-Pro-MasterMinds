@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dienstplan PRO</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{overflow:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(91,191,181,.4);border-radius:3px}
+.dark{
+  --bg1:#0d1526;--bg2:#151e30;--bg3:#1c2640;--bg4:#22304d;
+  --tx1:#eef2f8;--tx2:#8fa5c0;--tx3:#4a607a;
+  --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.12);
+  --acc:#5BBFB5;--acc-dim:rgba(91,191,181,.13);--acc-bg:rgba(91,191,181,.08);
+  --sh:0 4px 20px rgba(0,0,0,.4);--sh2:0 8px 32px rgba(0,0,0,.5);--sh3:0 20px 60px rgba(0,0,0,.6);
+  --cell-h:rgba(91,191,181,.09);--stripe:rgba(255,255,255,.016);
+  --we-bg:rgba(255,255,255,.025);--we-hdr:rgba(255,255,255,.04);
+  --hl-bg:rgba(251,191,36,.08);--hl-hdr:rgba(251,191,36,.14);
+  --ov:rgba(4,8,20,.72);--inp:#1c2640;
+  --grn:#10b981;--red:#ef4444;--orn:#f97316;--yel:#f59e0b;
+}
+.light{
+  --bg1:#ecf0f6;--bg2:#f7f9fc;--bg3:#ffffff;--bg4:#f0f4f9;
+  --tx1:#0a1628;--tx2:#364f6b;--tx3:#7d96ae;
+  --bd:rgba(0,0,0,.08);--bd2:rgba(0,0,0,.14);
+  --acc:#2E9089;--acc-dim:rgba(46,144,137,.12);--acc-bg:rgba(46,144,137,.07);
+  --sh:0 2px 12px rgba(0,0,0,.09);--sh2:0 6px 24px rgba(0,0,0,.14);--sh3:0 16px 48px rgba(0,0,0,.18);
+  --cell-h:rgba(46,144,137,.08);--stripe:rgba(0,0,0,.02);
+  --we-bg:rgba(0,0,0,.02);--we-hdr:rgba(0,0,0,.03);
+  --hl-bg:rgba(245,158,11,.06);--hl-hdr:rgba(245,158,11,.12);
+  --ov:rgba(10,22,40,.52);--inp:#ffffff;
+  --grn:#059669;--red:#dc2626;--orn:#ea580c;--yel:#d97706;
+}
+#root{width:100vw;height:100vh;overflow:hidden}
+.app{display:flex;flex-direction:column;width:100vw;height:100vh;background:var(--bg1);color:var(--tx1)}
+.appbody{flex:1;display:flex;min-height:0;overflow:hidden}
+.appmain{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+/* Header */
+.hdr{flex-shrink:0;height:50px;background:var(--bg2);border-bottom:1px solid var(--bd2);display:flex;align-items:center;padding:0 10px;gap:6px;box-shadow:var(--sh);z-index:50;overflow:hidden}
+.logo{width:28px;height:28px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#5BBFB5,#2563eb);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:13px}
+.sep{width:1px;height:22px;background:var(--bd2);flex-shrink:0;margin:0 2px}
+.sp{flex:1}
+.monlbl{font-weight:600;font-size:13px;min-width:126px;text-align:center;white-space:nowrap;color:var(--tx1)}
+/* Dept tabs */
+.dtab{padding:5px 10px 4px;border-radius:5px 5px 0 0;font-size:11.5px;font-weight:500;cursor:pointer;border:1px solid transparent;border-bottom:none;background:none;font-family:inherit;color:var(--tx2);white-space:nowrap;transition:all .12s}
+.dtab.on{background:var(--bg1);color:var(--acc);border-color:var(--bd2)}
+.dtab:not(.on):hover{background:var(--acc-bg);color:var(--tx1)}
+/* Buttons */
+.hb{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:5px;font-size:11.5px;font-weight:500;cursor:pointer;transition:all .12s;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx1);font-family:inherit;white-space:nowrap;flex-shrink:0}
+.hb:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-bg)}
+.hb.on{background:var(--acc);color:#0a1628;border-color:var(--acc)}
+.hb.ic{padding:5px 7px;font-size:15px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;border:1px solid transparent;font-family:inherit}
+.btn-p{background:var(--acc);color:#0a1628;border-color:var(--acc)}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-s{background:var(--bg3);color:var(--tx1);border-color:var(--bd2)}
+.btn-s:hover{border-color:var(--acc);color:var(--acc)}
+.btn-d{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.3)}
+.btn-d:hover{background:rgba(239,68,68,.2)}
+.btn-sm{padding:3px 9px;font-size:11px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+/* Sync */
+.sync{display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;flex-shrink:0;border:1px solid}
+.sync.on{color:var(--grn);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.1)}
+.sync.sv{color:var(--orn);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.1)}
+.sync.off{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1)}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block}
+/* Unsaved */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.udot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--orn);position:absolute;top:3px;right:3px;animation:blink 1.2s infinite}
+/* Sidebar */
+.sidebar{flex-shrink:0;width:146px;background:var(--bg2);border-right:1px solid var(--bd2);display:flex;flex-direction:column;padding:8px 5px;gap:2px;overflow-y:auto;z-index:20;transition:width .18s}
+.sidebar.cl{width:40px}
+.sbhd{font-size:8.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;padding:2px 4px 6px;white-space:nowrap;overflow:hidden}
+.sbi{display:flex;align-items:center;gap:6px;padding:4px 5px;border-radius:6px;cursor:pointer;border:1px solid transparent;position:relative;transition:background .1s}
+.sbi:hover{background:var(--acc-bg)}
+.sbi.on{background:var(--acc-dim);border-color:var(--acc)}
+.sbi.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--acc);border-radius:0 2px 2px 0}
+.sbadge{width:26px;height:19px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:#fff;flex-shrink:0}
+.sblbl{font-size:11px;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbsub{font-size:9px;color:var(--tx3)}
+.sbsep{height:1px;background:var(--bd);margin:4px 0}
+/* Search */
+.searchbar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--bg2);border-bottom:1px solid var(--bd)}
+.searchbar input{flex:1;background:var(--bg1);border:1px solid var(--bd);border-radius:4px;padding:3px 7px;color:var(--tx1);font-size:11.5px;font-family:inherit;outline:none;transition:border-color .12s}
+.searchbar input:focus{border-color:var(--acc)}
+.searchbar input::placeholder{color:var(--tx3)}
+/* Table */
+.tblwrap{flex:1;overflow:auto;position:relative}
+.tblwrap.pan{cursor:grab}
+.stbl{border-collapse:separate;border-spacing:0;user-select:none}
+.stbl thead th{position:sticky;top:0;z-index:12;background:var(--bg2);border-bottom:2px solid var(--bd2);padding:0;height:44px}
+.stbl thead th.nhdr{position:sticky;left:0;z-index:21}
+.nhdr-in{padding:0 8px;font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.dhdr{min-width:40px;width:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:44px;border-left:1px solid var(--bd)}
+.dhdr.we{background:var(--we-hdr)}
+.dhdr.hl{background:var(--hl-hdr)}
+.nc{position:sticky;left:0;z-index:8;background:var(--bg2);border-right:2px solid var(--bd2);min-width:172px;width:172px;padding:3px 8px;cursor:pointer;transition:background .1s}
+.nc.wo{min-width:188px;width:188px}
+.stbl tbody tr:hover .nc{background:var(--bg4)}
+.nc-in{display:flex;align-items:center;gap:5px}
+.nc-name{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;color:var(--tx1)}
+.nc-sub{font-size:9px;color:var(--tx3)}
+.dragh{font-size:11px;cursor:grab;color:var(--tx3);flex-shrink:0;user-select:none}
+/* Day cells */
+.dc{min-width:40px;width:40px;height:32px;text-align:center;vertical-align:middle;border:1px solid var(--bd);cursor:pointer;padding:1px;position:relative;transition:background .07s}
+.dc:hover{background:var(--cell-h)}
+.dc.ev{background:var(--stripe)}
+.dc.ev:hover{background:var(--cell-h)}
+.dc.we{background:var(--we-bg)}
+.dc.hl{background:var(--hl-bg)}
+.dc.sel{background:var(--acc-dim);outline:2px solid var(--acc);outline-offset:-2px}
+.dc.kbf{outline:3px solid var(--acc);outline-offset:-3px;z-index:2}
+@keyframes swp{0%,100%{outline-color:var(--orn)}50%{outline-color:#fde68a}}
+.dc.swaps{outline:2px dashed var(--orn);outline-offset:-2px;background:rgba(249,115,22,.14);animation:swp .85s infinite}
+.dc.wfr{background:rgba(16,185,129,.17)!important}
+.dc.wbl{background:rgba(239,68,68,.17)!important}
+.dc.wsh{background:rgba(91,191,181,.17)!important}
+.sbdg{display:inline-flex;align-items:center;justify-content:center;border-radius:4px;font-size:9.5px;font-weight:800;letter-spacing:.3px;padding:1px 3px;min-width:24px;height:20px;transition:transform .08s}
+.sbdg:hover{transform:scale(1.08)}
+.ndot{position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.wc{color:var(--red);font-size:12px;flex-shrink:0}
+.ww{color:var(--orn);font-size:12px;flex-shrink:0}
+/* Stats col */
+.statscol{flex-shrink:0;width:182px;background:var(--bg2);border-left:2px solid var(--bd2);display:flex;flex-direction:column;overflow:hidden}
+.statshdr{height:44px;flex-shrink:0;background:var(--bg2);border-bottom:2px solid var(--bd2);display:flex;align-items:center;padding:0 8px;font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
+.statsbody{flex:1;overflow:hidden}
+.statsrow{height:32px;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 6px;gap:3px}
+/* Footer */
+.tblfoot{flex-shrink:0;height:30px;overflow:hidden;background:var(--bg2);border-top:1px solid var(--bd);display:flex;align-items:center;font-size:9px}
+.fcname{min-width:172px;width:172px;flex-shrink:0;padding:0 8px;border-right:2px solid var(--bd2);height:100%;display:flex;align-items:center;font-size:9px;color:var(--tx3);background:var(--bg2);position:sticky;left:0;z-index:5}
+.fcname.wo{min-width:188px;width:188px}
+.fccell{min-width:40px;width:40px;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;border-right:1px solid var(--bd)}
+.fccell.under{background:rgba(239,68,68,.14);color:var(--red)}
+/* Modals */
+.ov{position:fixed;inset:0;background:var(--ov);backdrop-filter:blur(5px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(-6px)}to{opacity:1;transform:none}}
+.modal{background:var(--bg2);border:1px solid var(--bd2);border-radius:12px;padding:22px;min-width:340px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--sh3);animation:mIn .16s ease}
+.modal.wd{max-width:740px}
+.modal.xl{max-width:880px}
+.mtit{font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.mcl{margin-left:auto;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:18px;padding:0;line-height:1}
+.mcl:hover{color:var(--tx1)}
+/* Context menus */
+@keyframes cIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+.ctxm{position:fixed;background:var(--bg2);border:1px solid var(--bd2);border-radius:8px;padding:4px;z-index:200;min-width:172px;box-shadow:var(--sh2);animation:cIn .1s ease}
+.ctxi{padding:7px 11px;border-radius:5px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;color:var(--tx1);transition:background .08s}
+.ctxi:hover{background:var(--acc-bg);color:var(--acc)}
+.ctxi.d:hover{background:rgba(239,68,68,.1);color:var(--red)}
+.ctxsp{height:1px;background:var(--bd);margin:3px 0}
+/* FAB */
+@keyframes fabIn{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%)}}
+.fab{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--acc);border-radius:36px;padding:6px 12px;display:flex;align-items:center;gap:8px;z-index:50;box-shadow:0 4px 20px rgba(91,191,181,.28);animation:fabIn .16s ease;white-space:nowrap}
+/* Form inputs */
+.fi{width:100%;background:var(--inp);border:1px solid var(--bd2);border-radius:6px;padding:6px 9px;color:var(--tx1);font-size:12px;outline:none;transition:border-color .12s;font-family:inherit}
+.fi:focus{border-color:var(--acc)}
+.fi::placeholder{color:var(--tx3)}
+select.fi option{background:var(--bg2);color:var(--tx1)}
+.fl{font-size:11px;color:var(--tx2);margin-bottom:3px;display:block;font-weight:500}
+/* Progress */
+.pbar{height:4px;background:var(--bg1);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.pfill{height:100%;background:linear-gradient(90deg,var(--acc),#7DCEC5);border-radius:2px;transition:width .3s}
+.logbox{height:110px;overflow-y:auto;background:var(--bg1);border:1px solid var(--bd);border-radius:6px;padding:6px;font-family:monospace;font-size:10px}
+.ll{padding:1.5px 0;border-bottom:1px solid var(--bd);color:var(--tx2)}
+.ls{color:var(--grn)}.le{color:var(--red)}.lw{color:var(--orn)}
+/* Misc */
+.smrow{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bd)}
+.smrow:last-child{border-bottom:none}
+.sbar{height:5px;border-radius:3px;background:var(--bg1);overflow:hidden;flex:1}
+.sbarfill{height:100%;border-radius:3px;transition:width .4s}
+.colsw{width:22px;height:22px;border-radius:4px;border:2px solid var(--bd2);cursor:pointer;padding:0;flex-shrink:0}
+.dragov td{background:var(--acc-dim)!important;border-top:2px solid var(--acc)!important}
+/* Print */
+@media print{
+  .hdr,.sidebar,.statscol,.fab,.ov,.ctxm,.noprint,.searchbar{display:none!important}
+  body,#root,.app,.appbody,.appmain,.tblwrap{overflow:visible!important;height:auto!important;display:block!important}
+  .stbl thead th{position:static!important;background:#f5f7fa!important}
+  .nc{position:static!important;background:#f5f7fa!important;min-width:110px!important;width:110px!important}
+  .dc{min-width:24px!important;width:24px!important;height:20px!important}
+  .sbdg{font-size:7pt!important;min-width:16px!important;height:13px!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;border:1px solid #ccc!important}
+  @page{size:A3 landscape;margin:7mm}
+}
+</style>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#5BBFB5;font-size:16px;font-family:sans-serif">Lade...</div></div>
+<script type="text/babel">
+const{useState,useEffect,useRef,useCallback,useMemo,memo}=React;
+
+// ── Constants ──
+const LS='dpro_v6';
+const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
+const ROLES=['Stationsleitung','Stellv. Leitung','Fachkraft','Pflegekraft','MFA','Azubi'];
+
+const DEF_EMPS=[
+  {id:'e1',name:'Adams, Hendrik',role:'Stationsleitung',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e2',name:'Fuchsa, Jennifer',role:'Stellv. Leitung',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e3',name:'Günter, Stephanie',role:'Fachkraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e4',name:'Blank, Alexandra',role:'Fachkraft',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e5',name:'Weienberg, Hanna',role:'Fachkraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e6',name:'Hackmann, Matthias',role:'Fachkraft',vz:90,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e7',name:'Buchmüller, Jörg',role:'Fachkraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e8',name:'Friedrich, Kristina',role:'Pflegekraft',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e9',name:'Rösken, Katrin',role:'Pflegekraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e10',name:'Theißen, Jennifer',role:'Pflegekraft',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e11',name:'Daniels, Justin',role:'Pflegekraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e12',name:'Kaymaz, Melda',role:'Pflegekraft',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e13',name:'Kühn, Philipp',role:'Pflegekraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e14',name:'Strachanski, Julia',role:'Pflegekraft',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e15',name:'Preußner, Pauline',role:'Pflegekraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e16',name:'Bielok, Lara',role:'Pflegekraft',vz:100,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e17',name:'Wüstkamp, Bianca',role:'MFA',vz:65,carry:0,weG:'A',prefs:'',phone:'',note:''},
+  {id:'e18',name:'Bondzau, Martina',role:'MFA',vz:45,carry:0,weG:'B',prefs:'',phone:'',note:''},
+  {id:'e19',name:'Vetter, Alfred',role:'Pflegekraft',vz:9,carry:0,weG:'A',prefs:'',phone:'',note:''},
+];
+
+const DEF_SHIFTS=[
+  {id:'FD',label:'FD',name:'Frühdienst',hours:7.7,color:'#0ea5e9',tc:'#fff'},
+  {id:'SD',label:'SD',name:'Spätdienst',hours:7.7,color:'#d946ef',tc:'#fff'},
+  {id:'ND',label:'ND',name:'Nachtdienst',hours:10,color:'#f97316',tc:'#fff'},
+  {id:'ZD',label:'ZD',name:'Zwischendienst',hours:7.7,color:'#7c3aed',tc:'#fff'},
+  {id:'ST',label:'ST',name:'Spätteam',hours:7.7,color:'#2563eb',tc:'#fff'},
+  {id:'U',label:'U',name:'Urlaub',hours:0,color:'#d97706',tc:'#fff'},
+  {id:'K',label:'K',name:'Krank',hours:0,color:'#ef4444',tc:'#fff'},
+  {id:'LT',label:'LT',name:'Langzeit',hours:7.7,color:'#10b981',tc:'#fff'},
+  {id:'X',label:'X',name:'Frei',hours:0,color:'#475569',tc:'#fff'},
+];
+
+// Kürzel → Shift-ID mapping (zusätzlich zu shift.id)
+const DEF_SHORTCUTS={};
+
+const REST={
+  'ND_FD':{l:'c',msg:'ND→FD: ~0h Ruhezeit (§5 ArbZG!)'},
+  'ND_SD':{l:'w',msg:'ND→SD: ~8h Ruhezeit'},
+  'ND_ZD':{l:'w',msg:'ND→ZD: ~8h Ruhezeit'},
+  'ND_ST':{l:'w',msg:'ND→ST: ~8h Ruhezeit'},
+  'SD_FD':{l:'w',msg:'SD→FD: ~12h Ruhezeit'},
+};
+
+const PATS=[
+  {id:'p1',name:'Wechselschicht 14T',desc:'FD-Woche / SD-Woche',pat:['FD','FD','FD','FD','FD','X','X','SD','SD','SD','SD','SD','X','X']},
+  {id:'p2',name:'Nachtblock 7+7',desc:'7x Nacht dann 7x frei',pat:['ND','ND','ND','ND','ND','ND','ND','X','X','X','X','X','X','X']},
+  {id:'p3',name:'Gemischter Dienst',desc:'FD/SD/ND rotierend',pat:['FD','FD','SD','SD','ND','ND','X','FD','FD','SD','SD','ND','ND','X']},
+  {id:'p4',name:'5x Frühdienst',desc:'Mo-Fr Früh, WE frei',pat:['FD','FD','FD','FD','FD','X','X','FD','FD','FD','FD','FD','X','X']},
+  {id:'p5',name:'ND 3+4',desc:'3 Nächte, 4 frei',pat:['ND','ND','ND','X','X','X','X','ND','ND','ND','X','X','X','X']},
+];
+
+// ── Utils ──
+const dim=(y,m)=>new Date(y,m+1,0).getDate();
+const wday=(y,m,d)=>(new Date(y,m,d).getDay()+6)%7;
+const dk=(y,m,d)=>y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+const clone=o=>JSON.parse(JSON.stringify(o));
+let _uid=Date.now();
+const uid=()=>'u'+((_uid++).toString(36));
+const fmtH=h=>{if(h==null||isNaN(h))return'--';return(h<0?'-':'+')+Math.abs(h).toFixed(1)+'h'};
+
+function easter(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+    f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+    h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,
+    l=(32+2*e+2*i-h-k)%7,mv=Math.floor((a+11*h+22*l)/451);
+  return{m:Math.floor((h+l-7*mv+114)/31)-1,d:((h+l-7*mv+114)%31)+1};
+}
+function getHols(y){
+  const e=easter(y),ed=new Date(y,e.m,e.d);
+  const add=(dt,n)=>new Date(dt.getTime()+n*864e5);
+  const fmt=dt=>dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  return new Set([new Date(y,0,1),new Date(y,4,1),new Date(y,9,3),new Date(y,10,1),new Date(y,11,25),new Date(y,11,26),add(ed,-2),add(ed,1),add(ed,39),add(ed,50),add(ed,60)].map(fmt));
+}
+function getWD(y,m,hols){
+  let n=0;for(let d=1;d<=dim(y,m);d++){if(wday(y,m,d)<5&&!hols.has(dk(y,m,d)))n++;}return n;
+}
+const lsGet=()=>{try{const r=localStorage.getItem(LS);return r?JSON.parse(r):null}catch(_e){return null}};
+const lsSave=d=>{try{localStorage.setItem(LS,JSON.stringify(d))}catch(_e){}};
+
+function defState(){
+  const n=new Date();
+  return{
+    year:n.getFullYear(),month:n.getMonth(),
+    employees:DEF_EMPS,shifts:DEF_SHIFTS,
+    shortcuts:DEF_SHORTCUTS,
+    depts:[{id:'d1',name:'Notaufnahme'}],dept:'d1',
+    data:{d1:{}},notes:{d1:{}},wishes:{d1:{}}
+  };
+}
+
+// ── EmpTooltip ──
+function EmpTooltip({emp,data,shifts,year,month,visible,x,y}){
+  if(!visible||!emp)return null;
+  const hols=getHols(year);
+  const wds=getWD(year,month,hols);
+  const total=dim(year,month);
+  const soll=wds*7.7*(emp.vz/100);
+  let ist=0;const cnts={};
+  shifts.forEach(function(s){cnts[s.id]=0;});
+  for(let d=1;d<=total;d++){
+    const sid=data[emp.id+'_'+dk(year,month,d)];
+    if(sid){const s=shifts.find(function(x){return x.id===sid;});if(s){ist+=s.hours;cnts[sid]=(cnts[sid]||0)+1;}}
+  }
+  const diff=ist-soll+(emp.carry||0);
+  const workedShifts=shifts.filter(function(s){return cnts[s.id]>0;});
+  // Position: rechts vom cursor, aber nicht über den Rand
+  const tx=Math.min(x+14,window.innerWidth-230);
+  const ty=Math.min(y-10,window.innerHeight-220);
+  return(
+    <div style={{
+      position:'fixed',left:tx,top:ty,zIndex:300,
+      background:'var(--bg2)',border:'1px solid var(--bd2)',borderRadius:10,
+      padding:'12px 14px',minWidth:210,maxWidth:240,
+      boxShadow:'0 8px 32px rgba(0,0,0,.45)',
+      pointerEvents:'none',
+      animation:'mIn .12s ease'
+    }}>
+      <div style={{fontWeight:700,fontSize:12.5,color:'var(--tx1)',marginBottom:2}}>{emp.name}</div>
+      <div style={{fontSize:10.5,color:'var(--acc)',marginBottom:8}}>{emp.role}</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 10px',fontSize:10.5,marginBottom:8}}>
+        <span style={{color:'var(--tx3)'}}>Vollzeit</span><span style={{color:'var(--tx1)',fontWeight:600}}>{emp.vz}%</span>
+        <span style={{color:'var(--tx3)'}}>WE-Gruppe</span><span style={{color:'var(--tx1)',fontWeight:600}}>{emp.weG}</span>
+        <span style={{color:'var(--tx3)'}}>Soll</span><span style={{color:'var(--tx2)'}}>{soll.toFixed(1)}h</span>
+        <span style={{color:'var(--tx3)'}}>Ist</span><span style={{color:'var(--tx2)'}}>{ist.toFixed(1)}h</span>
+        <span style={{color:'var(--tx3)'}}>Differenz</span>
+        <span style={{color:diff>=0?'var(--grn)':'var(--red)',fontWeight:700}}>{fmtH(diff)}</span>
+      </div>
+      {workedShifts.length>0&&(
+        <div style={{borderTop:'1px solid var(--bd)',paddingTop:7,display:'flex',gap:4,flexWrap:'wrap'}}>
+          {workedShifts.map(function(s){return(
+            <span key={s.id} style={{display:'inline-flex',alignItems:'center',gap:3,padding:'1px 5px',borderRadius:3,background:s.color,color:s.tc,fontSize:8.5,fontWeight:700}}>
+              {s.label}<span style={{opacity:.8}}>×{cnts[s.id]}</span>
+            </span>
+          );})}
+        </div>
+      )}
+      {emp.prefs&&<div style={{borderTop:'1px solid var(--bd)',paddingTop:6,marginTop:6,fontSize:9.5,color:'var(--tx3)',fontStyle:'italic'}}>{emp.prefs}</div>}
+      {emp.note&&<div style={{borderTop:'1px solid var(--bd)',paddingTop:6,marginTop:6,fontSize:9.5,color:'var(--tx2)'}}>{emp.note}</div>}
+    </div>
+  );
+}
+
+// ── ShiftCell ──
+const ShiftCell=memo(function SC({empId,day,data,notes,shifts,sel,hols,year,month,wishes,wunsch,kbf,swapSrc,onDn,onEnt,onCtx,onDbl}){
+  const d=dk(year,month,day);
+  const ck=empId+'_'+d;
+  const sid=data[ck];
+  const sh=sid?shifts.find(function(s){return s.id===sid;}):null;
+  const note=notes[ck];
+  const wish=wishes[ck];
+  const isH=hols.has(d);
+  const w=wday(year,month,day);
+  const isWE=w>=5;
+  let cls='dc';
+  if(isH)cls+=' hl';else if(isWE)cls+=' we';
+  if(sel)cls+=' sel';
+  if(kbf)cls+=' kbf';
+  if(swapSrc)cls+=' swaps';
+  if(wunsch&&wish){
+    if(wish.type==='free')cls+=' wfr';
+    else if(wish.type==='blocked')cls+=' wbl';
+    else if(wish.type==='shift')cls+=' wsh';
+  }
+  return(
+    <td className={cls}
+      onMouseDown={function(e){if(e.button===0)onDn(e,empId,day);}}
+      onMouseEnter={function(){onEnt(empId,day);}}
+      onContextMenu={function(e){onCtx(e,empId,day);}}
+      onDoubleClick={function(e){onDbl(e,empId,day);}}
+    >
+      {sh?(<span className="sbdg" style={{background:sh.color,color:sh.tc}}>{sh.label}</span>)
+        :wunsch&&wish?(<span style={{fontSize:8.5,color:wish.type==='free'?'var(--grn)':wish.type==='blocked'?'var(--red)':'var(--acc)'}}>{wish.type==='free'?'V':wish.type==='blocked'?'X':wish.shiftId}</span>)
+        :null}
+      {note&&<span className="ndot"/>}
+    </td>
+  );
+});
+
+// ── EmpRow ──
+const EmpRow=memo(function ER({emp,days,data,notes,shifts,sel,hols,year,month,wishes,wunsch,kbEmp,kbDay,swapSrc,rw,sortMode,dragOver,onDn,onEnt,onCtx,onDbl,onEmpClick,onDS,onDO,onDrop,onDE,onEmpHover,onEmpLeave}){
+  return(
+    <tr className={dragOver?'dragov':''}>
+      <td className={'nc'+(sortMode?' wo':'')} onClick={function(){onEmpClick(emp);}}
+        draggable={sortMode}
+        onDragStart={function(e){onDS(e,emp.id);}}
+        onDragOver={function(e){onDO(e,emp.id);}}
+        onDrop={function(e){onDrop(e,emp.id);}}
+        onDragEnd={onDE}
+        onMouseEnter={function(e){onEmpHover(emp,e);}}
+        onMouseMove={function(e){onEmpHover(emp,e);}}
+        onMouseLeave={onEmpLeave}
+      >
+        <div className="nc-in">
+          {sortMode&&<span className="dragh">⠿</span>}
+          <div style={{minWidth:0,flex:1}}>
+            <div className="nc-name">{emp.name}</div>
+            <div className="nc-sub">{emp.role} · {emp.vz}% · WE-{emp.weG}</div>
+          </div>
+          {rw==='c'&&<span className="wc" title="Ruhezeitverletzung!">⚠</span>}
+          {rw==='w'&&<span className="ww" title="Ruhezeitwarnung">⚠</span>}
+        </div>
+      </td>
+      {days.map(function(day){
+        return(<ShiftCell key={day} empId={emp.id} day={day} data={data} notes={notes} shifts={shifts}
+          sel={sel.has(emp.id+'_'+dk(year,month,day))} hols={hols} year={year} month={month}
+          wishes={wishes} wunsch={wunsch} kbf={kbEmp===emp.id&&kbDay===day}
+          swapSrc={swapSrc===emp.id+'_'+dk(year,month,day)}
+          onDn={onDn} onEnt={onEnt} onCtx={onCtx} onDbl={onDbl}/>);
+      })}
+    </tr>
+  );
+});
+
+// ── StatsCol ──
+const StatsCol=memo(function SC2({employees,year,month,data,shifts,scrollTop}){
+  const hols=useMemo(function(){return getHols(year);},[year]);
+  const wds=useMemo(function(){return getWD(year,month,hols);},[year,month,hols]);
+  const total=dim(year,month);
+  const ref=useRef();
+  useEffect(function(){if(ref.current)ref.current.scrollTop=scrollTop||0;},[scrollTop]);
+  return(
+    <div className="statscol">
+      <div className="statshdr">SOLL / IST / DIFF</div>
+      <div ref={ref} className="statsbody">
+        {employees.map(function(emp){
+          const soll=wds*7.7*(emp.vz/100);
+          let ist=0;
+          for(let d=1;d<=total;d++){const s=shifts.find(function(x){return x.id===data[emp.id+'_'+dk(year,month,d)];});if(s)ist+=s.hours;}
+          const diff=ist-soll+(emp.carry||0);
+          return(
+            <div key={emp.id} className="statsrow">
+              <span style={{fontSize:8.5,color:'var(--tx3)',minWidth:28}}>{soll.toFixed(0)}</span>
+              <span style={{fontSize:8.5,minWidth:28}}>/{ist.toFixed(0)}</span>
+              <span style={{fontSize:9,fontWeight:700,marginLeft:'auto',color:diff>=0?'var(--grn)':'var(--red)'}}>{fmtH(diff)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
+// ── Sidebar ──
+const Sidebar=memo(function SB({shifts,active,setActive,wunsch}){
+  const items=wunsch
+    ?[{id:'free',label:'V',name:'Frei-Wunsch',bg:'#10b981'},{id:'blocked',label:'X',name:'Sperrtag',bg:'#ef4444'},...shifts.filter(function(s){return ['FD','SD','ND'].includes(s.id);}).map(function(s){return{id:'wish_'+s.id,label:s.label,name:s.name+' Wunsch',bg:s.color};})]
+    :[...shifts.map(function(s){return{id:s.id,label:s.label,name:s.name,bg:s.color,sub:s.hours>0?s.hours+'h':''};}),{id:'__del__',label:'—',name:'Löschen',bg:'var(--bg4)',tc:'var(--tx3)'}];
+  return(
+    <div className="sidebar">
+      <div className="sbhd">{wunsch?'Wünsche':'Dienste'}</div>
+      {items.map(function(it){
+        return(
+          <React.Fragment key={it.id}>
+            {it.id==='__del__'&&<div className="sbsep"/>}
+            <div className={'sbi'+(active===it.id?' on':'')} onClick={function(){setActive(active===it.id?null:it.id);}} title={it.name+(it.sub?' ('+it.sub+')':'')}>
+              <span className="sbadge" style={{background:it.bg,color:it.tc||'#fff',fontSize:it.label.length>2?8:10}}>{it.label}</span>
+              <div>
+                <div className="sblbl">{it.name}</div>
+                {it.sub&&<div className="sbsub">{it.sub}</div>}
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+});
+
+// ── SchedTable ──
+const SchedTable=memo(function ST({year,month,employees,shifts,data,notes,wishes,sel,active,locked,wunsch,onAction,onCtx,onDbl,sortMode,kbPos,swapSrc,onEmpHover,onEmpLeave}){
+  const days=useMemo(function(){return Array.from({length:dim(year,month)},function(_,i){return i+1;});},[year,month]);
+  const hols=useMemo(function(){return getHols(year);},[year]);
+  const paintRef=useRef({on:false});
+  const dragRef=useRef(null);
+  const[dragOver,setDragOver]=useState(null);
+
+  const restWarns=useMemo(function(){
+    const w={};
+    employees.forEach(function(emp){
+      let worst=null;
+      for(let d=2;d<=days.length;d++){
+        const prev=data[emp.id+'_'+dk(year,month,d-1)];
+        const cur=data[emp.id+'_'+dk(year,month,d)];
+        if(prev&&cur){const rw=REST[prev+'_'+cur];if(rw&&rw.l==='c'){worst='c';break;}if(rw&&rw.l==='w'&&worst!=='c')worst='w';}
+      }
+      if(worst)w[emp.id]=worst;
+    });
+    return w;
+  },[employees,data,year,month,days.length]);
+
+  const dayCounts=useMemo(function(){
+    return days.map(function(day){
+      const c={};shifts.forEach(function(s){c[s.id]=0;});
+      employees.forEach(function(emp){const sid=data[emp.id+'_'+dk(year,month,day)];if(sid)c[sid]=(c[sid]||0)+1;});
+      return c;
+    });
+  },[days,employees,data,shifts,year,month]);
+
+  function onCellDn(e,empId,day){
+    if(locked||!active)return;
+    paintRef.current={on:true};
+    const ck=empId+'_'+dk(year,month,day);
+    if(wunsch){
+      if(active==='free')onAction('wish',{ck:ck,type:'free'});
+      else if(active==='blocked')onAction('wish',{ck:ck,type:'blocked'});
+      else if(active.indexOf('wish_')===0)onAction('wish',{ck:ck,type:'shift',shiftId:active.slice(5)});
+    }else if(active==='__del__')onAction('del',{ck:ck});
+    else onAction('set',{ck:ck,sid:active});
+  }
+  function onCellEnt(empId,day){
+    if(!paintRef.current.on||locked||!active||wunsch)return;
+    const ck=empId+'_'+dk(year,month,day);
+    if(active==='__del__')onAction('del',{ck:ck});else onAction('set',{ck:ck,sid:active});
+  }
+  useEffect(function(){
+    function up(){paintRef.current.on=false;}
+    window.addEventListener('mouseup',up);
+    return function(){window.removeEventListener('mouseup',up);};
+  },[]);
+  function onDS(e,id){dragRef.current=id;e.dataTransfer.effectAllowed='move';}
+  function onDO(e,id){e.preventDefault();setDragOver(id);}
+  function onDropFn(e,tid){e.preventDefault();const sid=dragRef.current;if(sid&&sid!==tid)onAction('reorder',{srcId:sid,targetId:tid});setDragOver(null);dragRef.current=null;}
+  function onDE(){setDragOver(null);dragRef.current=null;}
+
+  return(
+    <div>
+      <table className="stbl">
+        <thead>
+          <tr>
+            <th className={'nhdr'+(sortMode?' wo':'')}><div className="nhdr-in">{sortMode?'⠿ Reihenfolge':'Mitarbeiter'}</div></th>
+            {days.map(function(day){
+              const d=dk(year,month,day);const w=wday(year,month,day);const isH=hols.has(d);const isWE=w>=5;
+              return(
+                <th key={day} style={{padding:0}}>
+                  <div className={'dhdr'+(isH?' hl':isWE?' we':'')}>
+                    <span style={{fontSize:8,fontWeight:700,textTransform:'uppercase',color:isH?'var(--yel)':'var(--tx3)'}}>{WD[w]}</span>
+                    <span style={{fontSize:12,fontWeight:800,color:isH?'var(--yel)':isWE?'var(--tx2)':'var(--tx1)'}}>{day}</span>
+                    {isH&&<span style={{fontSize:6.5,fontWeight:700,color:'var(--yel)'}}>FT</span>}
+                  </div>
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {employees.map(function(emp){
+            return(<EmpRow key={emp.id} emp={emp} days={days} data={data} notes={notes} shifts={shifts} sel={sel}
+              hols={hols} year={year} month={month} wishes={wishes} wunsch={wunsch}
+              kbEmp={kbPos&&kbPos.empId} kbDay={kbPos&&kbPos.day} swapSrc={swapSrc}
+              rw={restWarns[emp.id]} sortMode={sortMode} dragOver={dragOver===emp.id}
+              onDn={onCellDn} onEnt={onCellEnt} onCtx={onCtx} onDbl={onDbl}
+              onEmpClick={function(e){onAction('editEmp',{emp:e});}}
+              onDS={onDS} onDO={onDO} onDrop={onDropFn} onDE={onDE}
+              onEmpHover={onEmpHover} onEmpLeave={onEmpLeave}/>);
+          })}
+        </tbody>
+      </table>
+      <div className="tblfoot" style={{minWidth:'max-content'}}>
+        <div className={'fcname'+(sortMode?' wo':'')}>Tagesbestand</div>
+        {days.map(function(day,i){
+          const c=dayCounts[i];const isH=hols.has(dk(year,month,day));
+          const fdU=(c.FD||0)<2,ndU=(c.ND||0)<1;
+          return(
+            <div key={day} className={'fccell'+((fdU||ndU)?' under':'')} title={'FD:'+(c.FD||0)+' SD:'+(c.SD||0)+' ND:'+(c.ND||0)} style={{background:isH?'var(--hl-bg)':''}}>
+              <span style={{fontSize:8,color:fdU?'var(--red)':'inherit'}}>F{c.FD||0}</span>
+              <span style={{fontSize:8,color:ndU?'var(--red)':'inherit'}}>N{c.ND||0}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
+// ── NoteModal ──
+function NoteModal({empName,day,year,month,note,onSave,onClose}){
+  const[txt,setTxt]=useState(note||'');
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal">
+        <div className="mtit">Notiz — {empName}<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{fontSize:11,color:'var(--tx3)',marginBottom:10}}>{day}. {MONTHS[month]} {year}</div>
+        <textarea className="fi" style={{minHeight:90,resize:'vertical'}} value={txt} onChange={function(e){setTxt(e.target.value);}} placeholder="Notiz eingeben..." autoFocus/>
+        <div style={{display:'flex',gap:7,justifyContent:'flex-end',marginTop:12}}>
+          <button className="btn btn-s btn-sm" onClick={onClose}>Abbrechen</button>
+          <button className="btn btn-d btn-sm" onClick={function(){onSave('');}}>Löschen</button>
+          <button className="btn btn-p btn-sm" onClick={function(){onSave(txt);}}>Speichern</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── EmpModal (erweitert mit Telefon + Notiz) ──
+function EmpModal({emp,onSave,onDelete,onClose}){
+  const[f,setF]=useState(Object.assign({phone:'',note:''},emp));
+  function u(k,v){setF(function(p){return Object.assign({},p,{[k]:v});});}
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal">
+        <div className="mtit">{emp.id?'Mitarbeiter bearbeiten':'Mitarbeiter hinzufügen'}<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
+          <div style={{gridColumn:'1/-1'}}><label className="fl">Name</label><input className="fi" value={f.name} onChange={function(e){u('name',e.target.value);}} placeholder="Nachname, Vorname" autoFocus/></div>
+          <div><label className="fl">Rolle</label><select className="fi" value={f.role} onChange={function(e){u('role',e.target.value);}}>{ROLES.map(function(r){return <option key={r}>{r}</option>;})}</select></div>
+          <div><label className="fl">Vollzeit (%)</label><input className="fi" type="number" min="1" max="100" value={f.vz} onChange={function(e){u('vz',+e.target.value);}}/></div>
+          <div><label className="fl">Stundenübertrag (h)</label><input className="fi" type="number" step="0.1" value={f.carry||0} onChange={function(e){u('carry',+e.target.value);}}/></div>
+          <div><label className="fl">WE-Gruppe</label><select className="fi" value={f.weG} onChange={function(e){u('weG',e.target.value);}}><option value="A">Gruppe A</option><option value="B">Gruppe B</option></select></div>
+          <div><label className="fl">Telefon</label><input className="fi" value={f.phone||''} onChange={function(e){u('phone',e.target.value);}} placeholder="z.B. 0151-..."/></div>
+          <div style={{gridColumn:'1/-1'}}><label className="fl">Interne Notiz</label><textarea className="fi" value={f.note||''} onChange={function(e){u('note',e.target.value);}} style={{minHeight:40,resize:'vertical'}} placeholder="z.B. bevorzugte Schichten, Besonderheiten..."/></div>
+          <div style={{gridColumn:'1/-1'}}><label className="fl">KI-Präferenzen</label><textarea className="fi" value={f.prefs||''} onChange={function(e){u('prefs',e.target.value);}} style={{minHeight:40,resize:'vertical'}} placeholder="z.B. keine Nachtdienste, max. 3 WE/Monat..."/></div>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between'}}>
+          {f.id?<button className="btn btn-d btn-sm" onClick={function(){onDelete(emp.id);}}>Entfernen</button>:<span/>}
+          <div style={{display:'flex',gap:7}}>
+            <button className="btn btn-s btn-sm" onClick={onClose}>Abbrechen</button>
+            <button className="btn btn-p btn-sm" onClick={function(){onSave(f);}}>Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── PatModal ──
+function PatModal({empId,empName,startDay,year,month,onApply,onClose}){
+  const[sel,setSel]=useState(null);
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal">
+        <div className="mtit">Schichtmuster — {empName}<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{fontSize:11,color:'var(--tx3)',marginBottom:10}}>Start: {startDay}. {MONTHS[month]} {year}</div>
+        <div style={{display:'flex',flexDirection:'column',gap:6,maxHeight:360,overflowY:'auto'}}>
+          {PATS.map(function(p){
+            return(
+              <div key={p.id} onClick={function(){setSel(p);}} style={{padding:'9px 12px',borderRadius:8,cursor:'pointer',border:'1px solid '+(sel&&sel.id===p.id?'var(--acc)':'var(--bd)'),background:sel&&sel.id===p.id?'var(--acc-dim)':'var(--bg3)',transition:'all .1s'}}>
+                <div style={{fontWeight:600,fontSize:12,marginBottom:2}}>{p.name}</div>
+                <div style={{fontSize:10.5,color:'var(--tx3)',marginBottom:5}}>{p.desc}</div>
+                <div style={{display:'flex',gap:2,flexWrap:'wrap'}}>
+                  {p.pat.map(function(sid,i){const s=DEF_SHIFTS.find(function(x){return x.id===sid;});return(<span key={i} style={{fontSize:8.5,fontWeight:800,padding:'1px 4px',borderRadius:3,background:s?s.color:'var(--bg4)',color:s?'#fff':'var(--tx3)'}}>{sid}</span>);})}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:'flex',gap:7,justifyContent:'flex-end',marginTop:14}}>
+          <button className="btn btn-s btn-sm" onClick={onClose}>Abbrechen</button>
+          <button className="btn btn-p btn-sm" disabled={!sel} onClick={function(){if(sel)onApply(empId,startDay,sel.pat);}}>Anwenden</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ShiftMgr (mit Kürzel-Feld) ──
+function ShiftMgr({shifts,shortcuts,onSave,onClose}){
+  const[list,setList]=useState(shifts.map(function(s){return Object.assign({},s);}));
+  const[sc,setSc]=useState(Object.assign({},shortcuts||{}));
+  const[tab,setTab]=useState('shifts');
+
+  function upd(id,k,v){setList(function(l){return l.map(function(s){return s.id===id?Object.assign({},s,{[k]:v}):s;});});}
+  function add(){setList(function(l){return[...l,{id:'C'+Date.now(),label:'NEU',name:'Neuer Dienst',hours:7.7,color:'#64748b',tc:'#fff'}];});}
+  function del(id){
+    if(DEF_SHIFTS.find(function(s){return s.id===id;})){alert('Standard-Dienste sind geschützt.');return;}
+    setList(function(l){return l.filter(function(s){return s.id!==id;});});
+  }
+  function setSCEntry(key,val){setSc(function(p){const n=Object.assign({},p);if(val.trim())n[key.toUpperCase()]=val;else delete n[key.toUpperCase()];return n;});}
+  function removeSC(key){setSc(function(p){const n=Object.assign({},p);delete n[key];return n;});}
+  function addSC(){
+    const k=prompt('Kürzel (z.B. FN für Frühnacht):');
+    if(!k||!k.trim())return;
+    const ku=k.trim().toUpperCase();
+    if(sc[ku]){alert('Dieses Kürzel existiert bereits.');return;}
+    setSc(function(p){return Object.assign({},p,{[ku]:list[0]?list[0].id:'FD'});});
+  }
+
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal wd">
+        <div className="mtit">Dienste & Kürzel<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{display:'flex',gap:0,marginBottom:14,borderBottom:'1px solid var(--bd)'}}>
+          {['shifts','shortcuts'].map(function(t){return(
+            <button key={t} onClick={function(){setTab(t);}} style={{padding:'6px 16px',background:'none',border:'none',borderBottom:'2px solid '+(tab===t?'var(--acc)':'transparent'),color:tab===t?'var(--acc)':'var(--tx3)',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:tab===t?700:400,transition:'all .12s'}}>
+              {t==='shifts'?'Dienste':'Kürzel'}
+            </button>
+          );})}
+        </div>
+
+        {tab==='shifts'&&(
+          <React.Fragment>
+            <div style={{fontSize:10.5,color:'var(--tx3)',marginBottom:10}}>Farbe · Kürzel (max. 3) · Name · Stunden. Standard-Dienste sind geschützt.</div>
+            <div style={{maxHeight:360,overflowY:'auto'}}>
+              {list.map(function(s){
+                const isProtected=!!DEF_SHIFTS.find(function(d){return d.id===s.id;});
+                return(
+                  <div key={s.id} className="smrow">
+                    <input type="color" value={s.color} onChange={function(e){upd(s.id,'color',e.target.value);}} className="colsw" title="Farbe"/>
+                    <span className="sbdg" style={{background:s.color,color:s.tc,minWidth:28,flexShrink:0}}>{s.label}</span>
+                    <input className="fi" style={{width:52,fontWeight:700}} value={s.label} maxLength={3} onChange={function(e){upd(s.id,'label',e.target.value.toUpperCase());}} placeholder="Kürzel" disabled={isProtected}/>
+                    <input className="fi" style={{flex:1}} value={s.name} onChange={function(e){upd(s.id,'name',e.target.value);}} placeholder="Name"/>
+                    <input className="fi" style={{width:56}} type="number" step="0.1" min="0" max="24" value={s.hours} onChange={function(e){upd(s.id,'hours',+e.target.value);}} title="Stunden"/>
+                    <span style={{fontSize:10,color:'var(--tx3)',flexShrink:0}}>h</span>
+                    {!isProtected?<button className="btn btn-d btn-sm" onClick={function(){del(s.id);}}>✕</button>:<span style={{width:38}}/>}
+                  </div>
+                );
+              })}
+            </div>
+            <button className="btn btn-s btn-sm" onClick={add} style={{marginTop:10}}>+ Dienst hinzufügen</button>
+          </React.Fragment>
+        )}
+
+        {tab==='shortcuts'&&(
+          <React.Fragment>
+            <div style={{fontSize:10.5,color:'var(--tx3)',marginBottom:12}}>
+              Kürzel erlauben dir, beim Tastatur-Eingabe-Modus eigene Buchstabenfolgen zu definieren, die auf Dienste gemappt werden. Z.B. "FN" → Frühnacht.
+            </div>
+            <div style={{fontSize:10,color:'var(--acc)',background:'var(--acc-bg)',border:'1px solid var(--acc-dim)',borderRadius:6,padding:'6px 10px',marginBottom:12}}>
+              Standard-Kürzel: {list.map(function(s){return s.label;}).join(', ')} — diese brauchen hier nicht eingetragen werden.
+            </div>
+            <div style={{maxHeight:300,overflowY:'auto',display:'flex',flexDirection:'column',gap:6}}>
+              {Object.entries(sc).length===0&&<div style={{fontSize:11.5,color:'var(--tx3)',padding:'12px 0'}}>Noch keine benutzerdefinierten Kürzel. Klicke auf + um eines hinzuzufügen.</div>}
+              {Object.entries(sc).map(function(entry){
+                const key=entry[0],val=entry[1];
+                const sh=list.find(function(s){return s.id===val;});
+                return(
+                  <div key={key} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'var(--bg3)',borderRadius:7,border:'1px solid var(--bd)'}}>
+                    <code style={{background:'var(--bg1)',border:'1px solid var(--bd2)',borderRadius:4,padding:'2px 8px',fontSize:12,fontWeight:700,color:'var(--acc)',minWidth:44,textAlign:'center'}}>{key}</code>
+                    <span style={{color:'var(--tx3)',fontSize:11}}>→</span>
+                    <select className="fi" style={{flex:1}} value={val} onChange={function(e){setSCEntry(key,e.target.value);}}>
+                      {list.map(function(s){return <option key={s.id} value={s.id}>{s.label} — {s.name}</option>;})}
+                    </select>
+                    {sh&&<span className="sbdg" style={{background:sh.color,color:sh.tc,fontSize:9,flexShrink:0}}>{sh.label}</span>}
+                    <button className="btn btn-d btn-sm" style={{flexShrink:0}} onClick={function(){removeSC(key);}}>✕</button>
+                  </div>
+                );
+              })}
+            </div>
+            <button className="btn btn-s btn-sm" onClick={addSC} style={{marginTop:12}}>+ Kürzel hinzufügen</button>
+          </React.Fragment>
+        )}
+
+        <div style={{display:'flex',gap:7,justifyContent:'flex-end',marginTop:16,borderTop:'1px solid var(--bd)',paddingTop:14}}>
+          <button className="btn btn-s btn-sm" onClick={onClose}>Abbrechen</button>
+          <button className="btn btn-p btn-sm" onClick={function(){onSave(list,sc);}}>Übernehmen</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── SwapModal ──
+function SwapModal({srcKey,employees,shifts,data,year,month,onSwap,onClose}){
+  const parts=srcKey.split('_');
+  const srcEmpId=parts[0];
+  const srcDk=parts.slice(1).join('_');
+  const srcSh=shifts.find(function(s){return s.id===data[srcKey];});
+  const srcEmp=employees.find(function(e){return e.id===srcEmpId;});
+  const total=dim(year,month);
+  const opts=[];
+  for(let d=1;d<=total;d++){
+    const dkk=dk(year,month,d);
+    employees.forEach(function(emp){
+      const ck=emp.id+'_'+dkk;
+      if(ck!==srcKey&&data[ck]){const sh=shifts.find(function(s){return s.id===data[ck];});if(sh)opts.push({ck:ck,emp:emp,dkk:dkk,sh:sh});}
+    });
+  }
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal wd">
+        <div className="mtit">Dienst tauschen<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{padding:'8px 12px',background:'var(--bg3)',borderRadius:7,marginBottom:12,fontSize:12,display:'flex',alignItems:'center',gap:8}}>
+          <span style={{color:'var(--tx2)'}}>Quelle:</span>
+          <span style={{fontWeight:600}}>{srcEmp&&srcEmp.name}</span>
+          <span style={{color:'var(--tx3)',fontSize:10.5}}>{srcDk}</span>
+          {srcSh&&<span className="sbdg" style={{background:srcSh.color,color:'#fff',fontSize:9.5}}>{srcSh.label}</span>}
+        </div>
+        <div style={{maxHeight:340,overflowY:'auto',display:'flex',flexDirection:'column',gap:4}}>
+          {opts.length===0&&<div style={{padding:12,color:'var(--tx3)',fontSize:12}}>Keine tauschbaren Dienste gefunden.</div>}
+          {opts.map(function(o){
+            return(
+              <div key={o.ck} onClick={function(){onSwap(srcKey,o.ck);}} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 10px',borderRadius:7,cursor:'pointer',border:'1px solid var(--bd)',background:'var(--bg3)',transition:'border-color .1s'}} onMouseEnter={function(e){e.currentTarget.style.borderColor='var(--acc)';}} onMouseLeave={function(e){e.currentTarget.style.borderColor='var(--bd)';}}>
+                <span className="sbdg" style={{background:o.sh.color,color:'#fff',fontSize:9.5}}>{o.sh.label}</span>
+                <span style={{flex:1,fontSize:12,color:'var(--tx1)'}}>{o.emp.name}</span>
+                <span style={{fontSize:10.5,color:'var(--tx3)'}}>{o.dkk}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginTop:14}}>
+          <button className="btn btn-s btn-sm" onClick={onClose}>Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AIModal ──
+function AIModal({state,onClose,onResult}){
+  const[key,setKey]=useState(function(){try{return atob(localStorage.getItem('dp_ak')||'');}catch(_e){return'';}});
+  const[minFD,setMinFD]=useState(2);const[minSD,setMinSD]=useState(2);const[minND,setMinND]=useState(1);
+  const[run,setRun]=useState(false);const[prog,setProg]=useState(0);
+  const[logs,setLogs]=useState([]);const logRef=useRef();
+  function addLog(msg,t){setLogs(function(p){return[...p,{msg:msg,t:t||'i'}];});setTimeout(function(){if(logRef.current)logRef.current.scrollTop=9999;},30);}
+  function saveKey(){try{localStorage.setItem('dp_ak',btoa(key));addLog('Key gespeichert','s');}catch(_e){addLog('Key konnte nicht gespeichert werden','w');}}
+  async function go(){
+    if(!key){addLog('Kein API-Key!','e');return;}
+    setRun(true);setProg(10);
+    const{year,month,employees,shifts,dept,data}=state;
+    const total=dim(year,month);
+    const hols=getHols(year);
+    const hStr=Array.from(hols).filter(function(h){return h.startsWith(year+'-'+String(month+1).padStart(2,'0'));}).join(', ');
+    const empStr=employees.map(function(e){return e.id+': '+e.name+' ('+e.role+','+e.vz+'%,WE-'+e.weG+(e.prefs?','+e.prefs:'')+')';}).join('\n');
+    const prompt='Erstelle optimierten Dienstplan fuer '+MONTHS[month]+' '+year+' ('+total+' Tage).\n\nMitarbeiter:\n'+empStr+'\n\nRegeln: FD>='+minFD+'/Tag, SD>='+minSD+'/Tag, ND>='+minND+'/Tag, max 9 Tage Streak, ArbZG §5 (ND→FD verboten!), NRW Feiertage: '+(hStr||'keine')+'\n\nDienste: '+shifts.map(function(s){return s.id;}).join(',')+'\n\nAntworte NUR mit JSON: {"shifts":{"empId_YYYY-MM-DD":"SHIFT_ID",...}}';
+    addLog('Anfrage wird gesendet...');setProg(20);
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8192,messages:[{role:'user',content:prompt}]})});
+      addLog('HTTP '+res.status,res.ok?'i':'e');setProg(70);
+      const d=await res.json();
+      if(!res.ok){addLog('Fehler: '+(d.error&&d.error.message||'unbekannt'),'e');setRun(false);return;}
+      const txt=(d.content&&d.content[0]&&d.content[0].text)||'';
+      const jm=txt.match(/\{[\s\S]*\}/);
+      if(!jm){addLog('Kein gültiges JSON in der Antwort','e');setRun(false);return;}
+      const ns=JSON.parse(jm[0]).shifts||{};
+      addLog(Object.keys(ns).length+' Dienste erhalten','s');setProg(100);
+      onResult(ns,dept);addLog('Dienstplan erfolgreich eingefügt ✓','s');
+    }catch(err){addLog('Netzwerkfehler: '+err.message,'e');}
+    setRun(false);
+  }
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal" style={{maxWidth:480}}>
+        <div className="mtit">KI Dienstplan-Generator<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{marginBottom:12}}>
+          <label className="fl">Anthropic API-Key</label>
+          <div style={{display:'flex',gap:6}}><input className="fi" type="password" value={key} onChange={function(e){setKey(e.target.value);}} placeholder="sk-ant-..."/><button className="btn btn-s btn-sm" onClick={saveKey} style={{flexShrink:0}}>Speichern</button></div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:12}}>
+          <div><label className="fl">Min FD/Tag</label><input className="fi" type="number" min="0" max="10" value={minFD} onChange={function(e){setMinFD(+e.target.value);}}/></div>
+          <div><label className="fl">Min SD/Tag</label><input className="fi" type="number" min="0" max="10" value={minSD} onChange={function(e){setMinSD(+e.target.value);}}/></div>
+          <div><label className="fl">Min ND/Tag</label><input className="fi" type="number" min="0" max="10" value={minND} onChange={function(e){setMinND(+e.target.value);}}/></div>
+        </div>
+        {run&&<div className="pbar"><div className="pfill" style={{width:prog+'%'}}/></div>}
+        <div ref={logRef} className="logbox" style={{marginBottom:12}}>
+          {logs.length===0&&<div className="ll">Bereit...</div>}
+          {logs.map(function(l,i){return(<div key={i} className={'ll '+(l.t==='s'?'ls':l.t==='e'?'le':l.t==='w'?'lw':'')}>{l.msg}</div>);})}
+        </div>
+        <div style={{display:'flex',gap:7,justifyContent:'flex-end'}}>
+          <button className="btn btn-s btn-sm" onClick={onClose}>Schließen</button>
+          <button className="btn btn-p btn-sm" onClick={go} disabled={run}>{run?'Läuft...':'Starten'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── StatsModal ──
+function StatsModal({employees,shifts,data,year,month,onClose}){
+  const hols=useMemo(function(){return getHols(year);},[year]);
+  const wds=useMemo(function(){return getWD(year,month,hols);},[year,month,hols]);
+  const total=dim(year,month);
+  const wrkSh=shifts.filter(function(s){return s.hours>0||s.id==='U'||s.id==='K';});
+  const rows=employees.map(function(emp){
+    const soll=wds*7.7*(emp.vz/100);let ist=0;const cnts={};
+    shifts.forEach(function(s){cnts[s.id]=0;});
+    for(let d=1;d<=total;d++){const sid=data[emp.id+'_'+dk(year,month,d)];if(sid){const s=shifts.find(function(x){return x.id===sid;});if(s){ist+=s.hours;cnts[sid]=(cnts[sid]||0)+1;}}}
+    const diff=ist-soll+(emp.carry||0);const pct=soll>0?Math.min(120,Math.round(ist/soll*100)):0;
+    return{emp:emp,soll:soll,ist:ist,diff:diff,pct:pct,cnts:cnts};
+  });
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal xl">
+        <div className="mtit">Monatsstatistik — {MONTHS[month]} {year}<button className="mcl" onClick={onClose}>✕</button></div>
+        <div style={{fontSize:10.5,color:'var(--tx3)',marginBottom:10}}>Arbeitstage: {wds} · Kalendertage: {total}</div>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+            <thead><tr style={{background:'var(--bg3)',borderBottom:'2px solid var(--bd2)'}}>
+              <th style={{textAlign:'left',padding:'5px 8px',color:'var(--tx2)',fontWeight:600,whiteSpace:'nowrap'}}>Mitarbeiter</th>
+              <th style={{padding:'5px 7px',color:'var(--tx2)',fontWeight:600,textAlign:'right'}}>Soll</th>
+              <th style={{padding:'5px 7px',color:'var(--tx2)',fontWeight:600,textAlign:'right'}}>Ist</th>
+              <th style={{padding:'5px 7px',color:'var(--tx2)',fontWeight:600,textAlign:'right'}}>Diff</th>
+              {wrkSh.map(function(s){return(<th key={s.id} style={{padding:'5px 5px',textAlign:'center'}}><span className="sbdg" style={{background:s.color,color:'#fff',fontSize:8.5,minWidth:20}}>{s.label}</span></th>);})}
+              <th style={{padding:'5px 8px',color:'var(--tx2)',fontWeight:600,minWidth:100}}>Auslastung</th>
+            </tr></thead>
+            <tbody>
+              {rows.map(function(r){
+                return(
+                  <tr key={r.emp.id} style={{borderBottom:'1px solid var(--bd)'}}>
+                    <td style={{padding:'5px 8px',fontWeight:500,whiteSpace:'nowrap',color:'var(--tx1)'}}>{r.emp.name}</td>
+                    <td style={{padding:'5px 7px',color:'var(--tx2)',textAlign:'right',fontSize:10.5}}>{r.soll.toFixed(1)}</td>
+                    <td style={{padding:'5px 7px',textAlign:'right',fontSize:10.5,color:'var(--tx1)'}}>{r.ist.toFixed(1)}</td>
+                    <td style={{padding:'5px 7px',textAlign:'right',fontSize:10.5,fontWeight:700,color:r.diff>=0?'var(--grn)':'var(--red)'}}>{fmtH(r.diff)}</td>
+                    {wrkSh.map(function(s){return(<td key={s.id} style={{padding:'5px 5px',textAlign:'center',color:'var(--tx2)',fontSize:10.5}}>{r.cnts[s.id]||'—'}</td>);})}
+                    <td style={{padding:'5px 8px'}}><div style={{display:'flex',alignItems:'center',gap:5}}><div className="sbar"><div className="sbarfill" style={{width:r.pct+'%',background:r.pct>100?'var(--red)':r.pct>=90?'var(--grn)':'var(--acc)'}}/></div><span style={{fontSize:9.5,color:'var(--tx3)',minWidth:28,textAlign:'right'}}>{r.pct}%</span></div></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginTop:14}}><button className="btn btn-s btn-sm" onClick={onClose}>Schließen</button></div>
+      </div>
+    </div>
+  );
+}
+
+// ── WishModal ──
+function WishModal({wishes,employees,shifts,year,month,onClose}){
+  const rows=Object.entries(wishes).map(function(entry){
+    const ck=entry[0],w=entry[1];
+    const parts=ck.split('_');const empId=parts[0];const dkStr=parts.slice(1).join('_');
+    const emp=employees.find(function(e){return e.id===empId;});
+    const sh=w.shiftId?shifts.find(function(s){return s.id===w.shiftId;}):null;
+    return{ck:ck,emp:emp,dkStr:dkStr,w:w,sh:sh};
+  }).sort(function(a,b){return a.dkStr.localeCompare(b.dkStr);});
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal wd">
+        <div className="mtit">Wunschliste — {MONTHS[month]} {year}<button className="mcl" onClick={onClose}>✕</button></div>
+        {rows.length===0&&<div style={{color:'var(--tx3)',padding:'12px 0',fontSize:12}}>Keine Wünsche eingetragen.</div>}
+        <div style={{maxHeight:400,overflowY:'auto'}}>
+          {rows.map(function(r){
+            return(
+              <div key={r.ck} style={{display:'flex',alignItems:'center',gap:10,padding:'5px 0',borderBottom:'1px solid var(--bd)',fontSize:11.5}}>
+                <span style={{minWidth:160,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--tx1)'}}>{r.emp?r.emp.name:'?'}</span>
+                <span style={{minWidth:85,color:'var(--tx3)',fontSize:10.5}}>{r.dkStr}</span>
+                {r.w.type==='free'&&<span style={{padding:'1px 6px',borderRadius:3,fontSize:9.5,fontWeight:700,background:'rgba(16,185,129,.12)',color:'var(--grn)'}}>Frei-Wunsch</span>}
+                {r.w.type==='blocked'&&<span style={{padding:'1px 6px',borderRadius:3,fontSize:9.5,fontWeight:700,background:'rgba(239,68,68,.12)',color:'var(--red)'}}>Sperrtag</span>}
+                {r.w.type==='shift'&&r.sh&&<span className="sbdg" style={{background:r.sh.color,color:'#fff',fontSize:9}}>{r.sh.label}</span>}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginTop:14}}><button className="btn btn-s btn-sm" onClick={onClose}>Schließen</button></div>
+      </div>
+    </div>
+  );
+}
+
+// ── ShortcutsModal ──
+function ShortcutsModal({shortcuts,onClose}){
+  const items=[
+    ['↑ ↓ ← →','Zelle navigieren'],
+    ['Buchstabe tippen','Dienst setzen (F=FD, N=ND, FN=eigenes Kürzel...)'],
+    ['Del / Backspace','Dienst löschen'],
+    ['Esc','Fokus aufheben'],
+    ['Strg+Z','Rückgängig (50 Schritte)'],
+    ['Strg+Y','Wiederholen'],
+    ['Rechtsklick','Kontextmenü: Notiz, Tausch, Muster'],
+    ['Doppelklick','Notiz öffnen'],
+    ['Maus ziehen','Dienst auf mehrere Zellen malen'],
+    ['✋ Pan-Modus','Tabelle per Maus verschieben'],
+    ['⇅ Sort-Modus','Mitarbeiter per Drag umsortieren'],
+  ];
+  const scEntries=Object.entries(shortcuts||{});
+  return(
+    <div className="ov" onClick={function(e){if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal" style={{maxWidth:460}}>
+        <div className="mtit">Tastaturkürzel<button className="mcl" onClick={onClose}>✕</button></div>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,marginBottom:scEntries.length?14:0}}>
+          <tbody>{items.map(function(item,i){
+            return(<tr key={i} style={{borderBottom:'1px solid var(--bd)'}}>
+              <td style={{padding:'6px 0',paddingRight:12,whiteSpace:'nowrap',verticalAlign:'top'}}><code style={{background:'var(--bg3)',border:'1px solid var(--bd2)',borderRadius:4,padding:'2px 6px',fontFamily:'monospace',fontSize:10.5,color:'var(--acc)'}}>{item[0]}</code></td>
+              <td style={{padding:'6px 0',color:'var(--tx2)'}}>{item[1]}</td>
+            </tr>);
+          })}</tbody>
+        </table>
+        {scEntries.length>0&&(
+          <React.Fragment>
+            <div style={{fontSize:10,fontWeight:700,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:8}}>Benutzerdefinierte Kürzel</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:14}}>
+              {scEntries.map(function(entry){
+                return(<span key={entry[0]} style={{padding:'2px 8px',background:'var(--acc-bg)',border:'1px solid var(--acc-dim)',borderRadius:5,fontSize:11,color:'var(--acc)',fontWeight:600}}>
+                  <code style={{fontFamily:'monospace'}}>{entry[0]}</code> → {entry[1]}
+                </span>);
+              })}
+            </div>
+          </React.Fragment>
+        )}
+        <div style={{display:'flex',justifyContent:'flex-end'}}><button className="btn btn-s btn-sm" onClick={onClose}>Schließen</button></div>
+      </div>
+    </div>
+  );
+}
+
+// ── Context Menus ──
+function CellCtx({x,y,shiftId,onClose,onDel,onNote,onSwap,onPat}){
+  const ref=useRef();
+  useEffect(function(){
+    function h(e){if(ref.current&&!ref.current.contains(e.target))onClose();}
+    setTimeout(function(){document.addEventListener('mousedown',h);},0);
+    return function(){document.removeEventListener('mousedown',h);};
+  },[]);
+  const left=Math.min(x,window.innerWidth-185);const top=Math.min(y,window.innerHeight-180);
+  return(
+    <div ref={ref} className="ctxm" style={{left:left,top:top}}>
+      <div className="ctxi" onClick={function(){onNote();onClose();}}>📝 Notiz bearbeiten</div>
+      <div className="ctxi" onClick={function(){onPat();onClose();}}>📋 Schichtmuster anwenden</div>
+      {shiftId&&<React.Fragment>
+        <div className="ctxi" onClick={function(){onSwap();onClose();}}>🔄 Tausch starten</div>
+        <div className="ctxsp"/>
+        <div className="ctxi d" onClick={function(){onDel();onClose();}}>🗑 Dienst löschen</div>
+      </React.Fragment>}
+    </div>
+  );
+}
+
+function DeptCtx({x,y,onRename,onDelete,onClose}){
+  const ref=useRef();
+  useEffect(function(){
+    function h(e){if(ref.current&&!ref.current.contains(e.target))onClose();}
+    setTimeout(function(){document.addEventListener('mousedown',h);},0);
+    return function(){document.removeEventListener('mousedown',h);};
+  },[]);
+  return(
+    <div ref={ref} className="ctxm" style={{left:Math.min(x,window.innerWidth-180),top:Math.min(y,window.innerHeight-80)}}>
+      <div className="ctxi" onClick={function(){onRename();onClose();}}>✏️ Umbenennen</div>
+      <div className="ctxsp"/>
+      <div className="ctxi d" onClick={function(){onDelete();onClose();}}>🗑 Abteilung löschen</div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════
+// ── APP ──
+// ══════════════════════════════════════════
+function App(){
+  const[st,setSt]=useState(function(){
+    const ls=lsGet();
+    if(ls){return Object.assign(defState(),ls,{shortcuts:ls.shortcuts||{}});}
+    return defState();
+  });
+  const[dark,setDark]=useState(function(){return localStorage.getItem('dp_dark')!=='false';});
+  const[zoom,setZoom]=useState(100);
+  const[locked,setLocked]=useState(false);
+  const[active,setActive]=useState('FD');
+  const[wunsch,setWunsch]=useState(false);
+  const[sel,setSel]=useState(new Set());
+  const[dirty,setDirty]=useState(false);
+  const[pan,setPan]=useState(false);
+  const[sort,setSort]=useState(false);
+  const[search,setSearch]=useState('');
+  // Modals
+  const[cellCtx,setCellCtx]=useState(null);
+  const[deptCtx,setDeptCtx]=useState(null);
+  const[noteM,setNoteM]=useState(null);
+  const[empM,setEmpM]=useState(null);
+  const[patM,setPatM]=useState(null);
+  const[shiftMgr,setShiftMgr]=useState(false);
+  const[aiM,setAIM]=useState(false);
+  const[swapM,setSwapM]=useState(null);
+  const[swapSrc,setSwapSrc]=useState(null);
+  const[statsM,setStatsM]=useState(false);
+  const[wishM,setWishM]=useState(false);
+  const[shortM,setShortM]=useState(false);
+  // Keyboard
+  const[kbPos,setKbPos]=useState(null);
+  const[kbBuf,setKbBuf]=useState('');
+  // Scroll sync
+  const[stTop,setStTop]=useState(0);
+  // Tooltip
+  const[tooltip,setTooltip]=useState({emp:null,visible:false,x:0,y:0});
+  const tooltipTimer=useRef(null);
+
+  const undoRef=useRef([]);const redoRef=useRef([]);
+  const panRef=useRef({on:false});
+  const tblRef=useRef();const fileRef=useRef();const saveTimer=useRef();
+
+  // Dark mode
+  useEffect(function(){document.documentElement.className=dark?'dark':'light';localStorage.setItem('dp_dark',dark);},[dark]);
+
+  // Auto-save
+  const schedSave=useCallback(function(s){
+    setDirty(true);clearTimeout(saveTimer.current);
+    saveTimer.current=setTimeout(function(){lsSave(s);setDirty(false);},1500);
+  },[]);
+
+  const push=useCallback(function(ns){
+    undoRef.current=[...undoRef.current.slice(-50),clone(st)];
+    redoRef.current=[];setSt(ns);schedSave(ns);
+  },[st,schedSave]);
+
+  // Keyboard shortcuts
+  useEffect(function(){
+    function h(e){
+      if(e.ctrlKey&&e.key==='z'){e.preventDefault();if(undoRef.current.length){redoRef.current.push(clone(st));setSt(undoRef.current.pop());}return;}
+      if(e.ctrlKey&&e.key==='y'){e.preventDefault();if(redoRef.current.length){undoRef.current.push(clone(st));setSt(redoRef.current.pop());}return;}
+      const tag=document.activeElement&&document.activeElement.tagName;
+      if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+      const total=dim(st.year,st.month);const emps=st.employees;
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown'){
+        e.preventDefault();
+        setKbPos(function(prev){
+          const ei=prev?emps.findIndex(function(x){return x.id===prev.empId;}):0;
+          const day=prev?prev.day:1;let ni=ei,nd=day;
+          if(e.key==='ArrowLeft')nd=Math.max(1,day-1);
+          if(e.key==='ArrowRight')nd=Math.min(total,day+1);
+          if(e.key==='ArrowUp')ni=Math.max(0,ei-1);
+          if(e.key==='ArrowDown')ni=Math.min(emps.length-1,ei+1);
+          return{empId:emps[ni].id,day:nd};
+        });return;
+      }
+      if(e.key==='Escape'){setKbPos(null);setSel(new Set());setSwapSrc(null);setKbBuf('');return;}
+      if(kbPos){
+        if(e.key==='Delete'||e.key==='Backspace'){
+          e.preventDefault();
+          const d2=dk(st.year,st.month,kbPos.day);const ck=kbPos.empId+'_'+d2;
+          const nd=Object.assign({},st.data);nd[st.dept]=Object.assign({},nd[st.dept]);delete nd[st.dept][ck];
+          push(Object.assign({},st,{data:nd}));setKbBuf('');return;
+        }
+        if(/^[a-zA-Z]$/.test(e.key)){
+          e.preventDefault();
+          setKbBuf(function(prev){
+            const buf=(prev+e.key).slice(-4).toUpperCase();
+            // 1. Check custom shortcuts first
+            const sc=st.shortcuts||{};
+            if(sc[buf]){
+              const sid=sc[buf];
+              const d2=dk(st.year,st.month,kbPos.day);const ck=kbPos.empId+'_'+d2;
+              const nd=Object.assign({},st.data);nd[st.dept]=Object.assign({},nd[st.dept],{[ck]:sid});
+              push(Object.assign({},st,{data:nd}));return '';
+            }
+            // 2. Check shift ID match (multi-char)
+            const m2=st.shifts.find(function(s){return s.id===buf;});
+            if(m2){const d2=dk(st.year,st.month,kbPos.day);const ck=kbPos.empId+'_'+d2;const nd=Object.assign({},st.data);nd[st.dept]=Object.assign({},nd[st.dept],{[ck]:m2.id});push(Object.assign({},st,{data:nd}));return '';}
+            // 3. Check single char
+            const single=e.key.toUpperCase();
+            if(sc[single]){
+              const sid=sc[single];
+              const d2=dk(st.year,st.month,kbPos.day);const ck=kbPos.empId+'_'+d2;
+              const nd=Object.assign({},st.data);nd[st.dept]=Object.assign({},nd[st.dept],{[ck]:sid});
+              push(Object.assign({},st,{data:nd}));return '';
+            }
+            const m1=st.shifts.find(function(s){return s.id===single;});
+            if(m1){const d2=dk(st.year,st.month,kbPos.day);const ck=kbPos.empId+'_'+d2;const nd=Object.assign({},st.data);nd[st.dept]=Object.assign({},nd[st.dept],{[ck]:m1.id});push(Object.assign({},st,{data:nd}));return '';}
+            return buf.length>3?single:buf;
+          });
+        }
+      }
+    }
+    window.addEventListener('keydown',h);return function(){window.removeEventListener('keydown',h);};
+  },[st,kbPos,push]);
+
+  // Pan mode
+  const onPanDn=useCallback(function(e){if(!pan||e.button!==0)return;panRef.current={on:true,x:e.clientX,y:e.clientY,sl:tblRef.current.scrollLeft,st2:tblRef.current.scrollTop};e.preventDefault();},[pan]);
+  const onPanMv=useCallback(function(e){if(!panRef.current.on)return;tblRef.current.scrollLeft=panRef.current.sl+(panRef.current.x-e.clientX);tblRef.current.scrollTop=panRef.current.st2+(panRef.current.y-e.clientY);},[]);
+  const onPanUp=useCallback(function(){panRef.current.on=false;},[]);
+  useEffect(function(){window.addEventListener('mousemove',onPanMv);window.addEventListener('mouseup',onPanUp);return function(){window.removeEventListener('mousemove',onPanMv);window.removeEventListener('mouseup',onPanUp);};},[onPanMv,onPanUp]);
+
+  // Tooltip handlers
+  const onEmpHover=useCallback(function(emp,e){
+    clearTimeout(tooltipTimer.current);
+    tooltipTimer.current=setTimeout(function(){
+      setTooltip({emp:emp,visible:true,x:e.clientX,y:e.clientY});
+    },420);
+  },[]);
+  const onEmpLeave=useCallback(function(){
+    clearTimeout(tooltipTimer.current);
+    setTooltip(function(p){return Object.assign({},p,{visible:false});});
+  },[]);
+
+  const dep=st.dept;
+  const data=st.data[dep]||{};
+  const notes=st.notes[dep]||{};
+  const wishes=st.wishes[dep]||{};
+  const filteredEmps=useMemo(function(){
+    if(!search.trim())return st.employees;
+    const q=search.toLowerCase();
+    return st.employees.filter(function(e){return e.name.toLowerCase().indexOf(q)>=0||e.role.toLowerCase().indexOf(q)>=0;});
+  },[st.employees,search]);
+
+  function onAction(action,payload){
+    if(locked&&action!=='editEmp')return;
+    if(action==='set'){const nd=Object.assign({},st.data);nd[dep]=Object.assign({},nd[dep],{[payload.ck]:payload.sid});push(Object.assign({},st,{data:nd}));}
+    else if(action==='del'){const nd=Object.assign({},st.data);nd[dep]=Object.assign({},nd[dep]);delete nd[dep][payload.ck];push(Object.assign({},st,{data:nd}));}
+    else if(action==='wish'){const nw=Object.assign({},st.wishes);nw[dep]=Object.assign({},nw[dep]);if(nw[dep][payload.ck]&&nw[dep][payload.ck].type===payload.type)delete nw[dep][payload.ck];else nw[dep][payload.ck]=Object.assign({type:payload.type},payload.shiftId?{shiftId:payload.shiftId}:{});push(Object.assign({},st,{wishes:nw}));}
+    else if(action==='editEmp'){setEmpM(payload.emp);}
+    else if(action==='reorder'){const emps=[...st.employees];const si=emps.findIndex(function(e){return e.id===payload.srcId;});const ti=emps.findIndex(function(e){return e.id===payload.targetId;});if(si>=0&&ti>=0){const m=emps.splice(si,1)[0];emps.splice(ti,0,m);push(Object.assign({},st,{employees:emps}));}}
+  }
+
+  function onCtx(e,empId,day){e.preventDefault();const d=dk(st.year,st.month,day);const ck=empId+'_'+d;const sid=data[ck];setCellCtx({x:e.clientX,y:e.clientY,empId:empId,day:day,ck:ck,sid:sid});}
+  function onDbl(e,empId,day){setNoteM({empId:empId,day:day});}
+  function prevM(){setSt(function(s){let m=s.month-1,y=s.year;if(m<0){m=11;y--;}return Object.assign({},s,{month:m,year:y});});}
+  function nextM(){setSt(function(s){let m=s.month+1,y=s.year;if(m>11){m=0;y++;}return Object.assign({},s,{month:m,year:y});});}
+  function saveEmp(f){const emps=f.id?st.employees.map(function(e){return e.id===f.id?f:e;}):[...st.employees,Object.assign({},f,{id:uid()})];push(Object.assign({},st,{employees:emps}));setEmpM(null);}
+  function delEmp(id){if(!id){setEmpM(null);return;}if(!confirm('Wirklich entfernen?'))return;push(Object.assign({},st,{employees:st.employees.filter(function(e){return e.id!==id;})}));setEmpM(null);}
+  function addDept(){const name=prompt('Name der Abteilung:');if(!name)return;const nd={id:uid(),name:name};push(Object.assign({},st,{depts:[...st.depts,nd],data:Object.assign({},st.data,{[nd.id]:{}}),notes:Object.assign({},st.notes,{[nd.id]:{}}),wishes:Object.assign({},st.wishes,{[nd.id]:{}}),dept:nd.id}));}
+  function renameDept(id){const d=st.depts.find(function(x){return x.id===id;});if(!d)return;const name=prompt('Neuer Name:',d.name);if(!name||name===d.name)return;push(Object.assign({},st,{depts:st.depts.map(function(x){return x.id===id?Object.assign({},x,{name:name}):x;})}));}
+  function delDept(id){if(st.depts.length<=1){alert('Mindestens eine Abteilung muss bleiben.');return;}if(!confirm('Abteilung löschen?'))return;const newDepts=st.depts.filter(function(x){return x.id!==id;});const nd=Object.assign({},st.data);delete nd[id];const nn=Object.assign({},st.notes);delete nn[id];const nw=Object.assign({},st.wishes);delete nw[id];push(Object.assign({},st,{depts:newDepts,data:nd,notes:nn,wishes:nw,dept:st.dept===id?newDepts[0].id:st.dept}));}
+  function saveNote(txt){if(!noteM)return;const d=dk(st.year,st.month,noteM.day);const ck=noteM.empId+'_'+d;const nn=Object.assign({},st.notes);nn[dep]=Object.assign({},nn[dep]);if(txt)nn[dep][ck]=txt;else delete nn[dep][ck];push(Object.assign({},st,{notes:nn}));setNoteM(null);}
+  function applyPat(empId,startDay,pat){const total=dim(st.year,st.month);const nd=Object.assign({},st.data);nd[dep]=Object.assign({},nd[dep]);pat.forEach(function(sid,i){const d=startDay+i;if(d>total||sid==='X')return;nd[dep][empId+'_'+dk(st.year,st.month,d)]=sid;});push(Object.assign({},st,{data:nd}));setPatM(null);}
+  function saveShifts(list,sc){push(Object.assign({},st,{shifts:list,shortcuts:sc}));setShiftMgr(false);}
+  function doSwap(ck1,ck2){const nd=Object.assign({},st.data);nd[dep]=Object.assign({},nd[dep]);const s1=nd[dep][ck1],s2=nd[dep][ck2];if(s1)nd[dep][ck2]=s1;else delete nd[dep][ck2];if(s2)nd[dep][ck1]=s2;else delete nd[dep][ck1];push(Object.assign({},st,{data:nd}));setSwapM(null);setSwapSrc(null);}
+  function aiResult(ns,d){const nd=Object.assign({},st.data);nd[d]=Object.assign({},nd[d],ns);push(Object.assign({},st,{data:nd}));}
+  function doSave(){lsSave(st);setDirty(false);}
+  function doExport(){const b=new Blob([JSON.stringify(st,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dienstplan_'+st.year+'_'+String(st.month+1).padStart(2,'0')+'.dpz';a.click();}
+  function doImport(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const imp=JSON.parse(ev.target.result);push(Object.assign(defState(),imp,{shortcuts:imp.shortcuts||{}}));alert('Import erfolgreich!');}catch(_e){alert('Import fehlgeschlagen — ungültige Datei.');}};r.readAsText(f);e.target.value='';}
+  function bulkDel(){const nd=Object.assign({},st.data);nd[dep]=Object.assign({},nd[dep]);sel.forEach(function(k){delete nd[dep][k];});push(Object.assign({},st,{data:nd}));setSel(new Set());}
+  function bulkSet(sid){const nd=Object.assign({},st.data);nd[dep]=Object.assign({},nd[dep]);sel.forEach(function(k){nd[dep][k]=sid;});push(Object.assign({},st,{data:nd}));setSel(new Set());}
+
+  return(
+    <div className="app">
+      <header className="hdr">
+        <div className="logo">D</div>
+        <span style={{fontWeight:700,fontSize:14,flexShrink:0,whiteSpace:'nowrap',color:'var(--tx1)'}}>Dienstplan <span style={{color:'var(--acc)'}}>PRO</span></span>
+        <div className="sep"/>
+        <button className="hb ic" onClick={prevM} title="Vormonat">◀</button>
+        <span className="monlbl">{MONTHS[st.month]} {st.year}</span>
+        <button className="hb ic" onClick={nextM} title="Nächster Monat">▶</button>
+        <div className="sep"/>
+        <div style={{display:'flex',alignItems:'flex-end',gap:2,flexShrink:0}}>
+          {st.depts.map(function(d){return(
+            <button key={d.id} className={'dtab'+(dep===d.id?' on':'')}
+              onClick={function(){push(Object.assign({},st,{dept:d.id}));}}
+              onContextMenu={function(e){e.preventDefault();setDeptCtx({x:e.clientX,y:e.clientY,id:d.id});}}
+              title="Rechtsklick: umbenennen/löschen">{d.name}
+            </button>
+          );})}
+          <button className="hb btn-sm" style={{padding:'3px 7px',fontSize:13,marginBottom:1}} onClick={addDept} title="Abteilung hinzufügen">+</button>
+        </div>
+        <div className="sp"/>
+        <button className={'hb'+(wunsch?' on':'')} onClick={function(){setWunsch(function(v){return !v;});}}>{wunsch?'★':'☆'} Wünsche</button>
+        <button className="hb" onClick={function(){setWishM(true);}}>Wunschliste</button>
+        <button className={'hb ic'+(pan?' on':'')} onClick={function(){setPan(function(v){return !v;});}} title="Pan-Modus">✋</button>
+        <button className={'hb ic'+(sort?' on':'')} onClick={function(){setSort(function(v){return !v;});}} title="Reihenfolge sortieren">⇅</button>
+        <button className="hb" onClick={function(){setShiftMgr(true);}}>⚙ Dienste</button>
+        <button className="hb" onClick={function(){setStatsM(true);}}>📊 Statistik</button>
+        <button className="hb" onClick={function(){setAIM(true);}}>✦ KI</button>
+        <button className="hb ic" onClick={function(){setShortM(true);}} title="Tastaturkürzel">?</button>
+        <div className="sep"/>
+        <div style={{display:'flex',alignItems:'center',gap:5,flexShrink:0}}>
+          <span style={{fontSize:9.5,color:'var(--tx3)'}}>Zoom</span>
+          <input type="range" min="50" max="150" value={zoom} onChange={function(e){setZoom(+e.target.value);}} style={{width:60,accentColor:'var(--acc)',cursor:'pointer'}}/>
+          <span style={{fontSize:9.5,color:'var(--tx2)',minWidth:30}}>{zoom}%</span>
+        </div>
+        <button className="hb ic" onClick={function(){setLocked(function(v){return !v;});}} style={{color:locked?'#f59e0b':'var(--tx2)',fontSize:14}} title={locked?'Entsperren':'Sperren'}>{locked?'🔒':'🔓'}</button>
+        <button className="hb ic" onClick={function(){setDark(function(v){return !v;});}} title="Hell/Dunkel">{dark?'☀️':'🌙'}</button>
+        <div style={{display:'flex',alignItems:'center',gap:4,padding:'2px 8px',borderRadius:20,fontSize:10,fontWeight:600,flexShrink:0,border:'1px solid',color:dirty?'var(--orn)':'var(--grn)',borderColor:dirty?'rgba(249,115,22,.3)':'rgba(16,185,129,.3)',background:dirty?'rgba(249,115,22,.1)':'rgba(16,185,129,.1)'}}>
+          <span style={{width:5,height:5,borderRadius:'50%',background:'currentColor',display:'inline-block'}}/>
+          {dirty?'Ungespeichert':'Gespeichert'}
+        </div>
+        <button className="hb" onClick={doSave} title="Jetzt speichern">💾</button>
+        <button className="hb ic" onClick={doExport} title="Exportieren">⬇</button>
+        <button className="hb ic" onClick={function(){fileRef.current&&fileRef.current.click();}} title="Importieren">⬆</button>
+        <input ref={fileRef} type="file" accept=".dpz,.json" style={{display:'none'}} onChange={doImport}/>
+        <button className="hb ic" onClick={function(){window.print();}} title="Drucken">🖨</button>
+        <button className="hb" style={{background:'var(--acc)',color:'#0a1628',borderColor:'var(--acc)'}} onClick={function(){setEmpM({id:'',name:'',role:'Pflegekraft',vz:100,carry:0,weG:'A',prefs:'',phone:'',note:''});}}>+ MA</button>
+      </header>
+
+      <div className="appbody">
+        <Sidebar shifts={st.shifts} active={active} setActive={setActive} wunsch={wunsch}/>
+        <div className="appmain">
+          <div className="searchbar">
+            <span style={{fontSize:11,color:'var(--tx3)'}}>🔍</span>
+            <input placeholder="Mitarbeiter filtern..." value={search} onChange={function(e){setSearch(e.target.value);}}/>
+            {search&&<React.Fragment>
+              <button onClick={function(){setSearch('');}} style={{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:12,padding:0}}>✕</button>
+              <span style={{fontSize:10,color:'var(--tx3)',whiteSpace:'nowrap'}}>{filteredEmps.length}/{st.employees.length}</span>
+            </React.Fragment>}
+          </div>
+          {kbPos&&<div style={{position:'absolute',bottom:44,right:8,zIndex:55,background:'var(--bg2)',border:'1px solid var(--bd2)',borderRadius:6,padding:'3px 9px',fontSize:10,color:'var(--tx3)',pointerEvents:'none'}} className="noprint">Pfeiltasten · Kürzel tippen · Del=Löschen · Esc</div>}
+          <div ref={tblRef} className={'tblwrap'+(pan?' pan':'')} onMouseDown={onPanDn} onScroll={function(e){setStTop(e.target.scrollTop);}}>
+            <div style={{display:'flex',minWidth:'max-content'}}>
+              <div style={{transform:'scale('+zoom/100+')',transformOrigin:'top left',display:'inline-block'}}>
+                <SchedTable
+                  year={st.year} month={st.month} employees={filteredEmps} shifts={st.shifts}
+                  data={data} notes={notes} wishes={wishes} sel={sel} active={active}
+                  locked={locked} wunsch={wunsch} onAction={onAction} onCtx={onCtx} onDbl={onDbl}
+                  sortMode={sort} kbPos={kbPos} swapSrc={swapSrc}
+                  onEmpHover={onEmpHover} onEmpLeave={onEmpLeave}
+                />
+              </div>
+              <StatsCol employees={filteredEmps} year={st.year} month={st.month} data={data} shifts={st.shifts} scrollTop={stTop}/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tooltip */}
+      <EmpTooltip emp={tooltip.emp} data={data} shifts={st.shifts} year={st.year} month={st.month} visible={tooltip.visible} x={tooltip.x} y={tooltip.y}/>
+
+      {/* Context menus */}
+      {cellCtx&&<CellCtx x={cellCtx.x} y={cellCtx.y} shiftId={cellCtx.sid}
+        onClose={function(){setCellCtx(null);}}
+        onDel={function(){onAction('del',{ck:cellCtx.ck});setCellCtx(null);}}
+        onNote={function(){setNoteM({empId:cellCtx.empId,day:cellCtx.day});setCellCtx(null);}}
+        onSwap={function(){setSwapSrc(cellCtx.ck);setSwapM(cellCtx.ck);setCellCtx(null);}}
+        onPat={function(){setPatM({empId:cellCtx.empId,day:cellCtx.day});setCellCtx(null);}}/>}
+      {deptCtx&&<DeptCtx x={deptCtx.x} y={deptCtx.y}
+        onRename={function(){renameDept(deptCtx.id);}}
+        onDelete={function(){delDept(deptCtx.id);}}
+        onClose={function(){setDeptCtx(null);}}/>}
+
+      {/* Modals */}
+      {noteM&&(function(){
+        const emp=st.employees.find(function(e){return e.id===noteM.empId;});
+        const d=dk(st.year,st.month,noteM.day);
+        return(<NoteModal empName={emp?emp.name:''} day={noteM.day} year={st.year} month={st.month} note={notes[noteM.empId+'_'+d]} onSave={saveNote} onClose={function(){setNoteM(null);}}/>);
+      })()}
+      {empM&&<EmpModal emp={empM} onSave={saveEmp} onDelete={delEmp} onClose={function(){setEmpM(null);}}/>}
+      {patM&&<PatModal empId={patM.empId} empName={(st.employees.find(function(e){return e.id===patM.empId;})||{}).name||''} startDay={patM.day} year={st.year} month={st.month} onApply={applyPat} onClose={function(){setPatM(null);}}/>}
+      {shiftMgr&&<ShiftMgr shifts={st.shifts} shortcuts={st.shortcuts||{}} onSave={saveShifts} onClose={function(){setShiftMgr(false);}}/>}
+      {swapM&&<SwapModal srcKey={swapM} employees={st.employees} shifts={st.shifts} data={data} year={st.year} month={st.month} onSwap={doSwap} onClose={function(){setSwapM(null);setSwapSrc(null);}}/>}
+      {aiM&&<AIModal state={st} onClose={function(){setAIM(false);}} onResult={aiResult}/>}
+      {statsM&&<StatsModal employees={st.employees} shifts={st.shifts} data={data} year={st.year} month={st.month} onClose={function(){setStatsM(false);}}/>}
+      {wishM&&<WishModal wishes={wishes} employees={st.employees} shifts={st.shifts} year={st.year} month={st.month} onClose={function(){setWishM(false);}}/>}
+      {shortM&&<ShortcutsModal shortcuts={st.shortcuts||{}} onClose={function(){setShortM(false);}}/>}
+
+      {/* Bulk action FAB */}
+      {sel.size>0&&(
+        <div className="fab">
+          <span style={{fontSize:11.5,color:'var(--tx2)',flexShrink:0}}>{sel.size} gewählt</span>
+          {st.shifts.slice(0,5).map(function(s){return(<span key={s.id} onClick={function(){bulkSet(s.id);}} className="sbdg" style={{background:s.color,color:'#fff',cursor:'pointer',fontSize:10}}>{s.label}</span>);})}
+          <button className="btn btn-d btn-sm" onClick={bulkDel}>Löschen</button>
+          <button className="btn btn-s btn-sm" onClick={function(){setSel(new Set());}}>✕</button>
+        </div>
+      )}
+
+      {locked&&<div style={{position:'fixed',bottom:12,right:12,zIndex:55,background:'rgba(245,158,11,.12)',border:'1px solid rgba(245,158,11,.35)',borderRadius:7,padding:'4px 10px',fontSize:11,color:'#f59e0b'}} className="noprint">🔒 Bearbeitung gesperrt</div>}
+      {kbBuf&&<div style={{position:'fixed',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:55,background:'var(--bg2)',border:'1px solid var(--acc)',borderRadius:7,padding:'4px 12px',fontSize:12.5,color:'var(--acc)',letterSpacing:'.1em'}} className="noprint">{kbBuf}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App,null));
+</script>
+</body>
+</html>
