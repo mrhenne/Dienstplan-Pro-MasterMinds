@@ -872,7 +872,7 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
 [data-theme="dark"] #plan-table thead th { background: #1e2028 !important; color: rgba(255,255,255,0.65) !important; }
 
 .th-employee { min-width: 150px; align-items: flex-start !important; padding-left: 14px !important; }
-.col-stat { min-width: 38px; font-size: 11px; font-family: 'DM Mono', 'Courier New', monospace; }
+.col-stat { width: 46px; min-width: 46px; font-size: 11px; font-family: 'DM Mono', 'Courier New', monospace; }
 
 .th-day-num {
   font-size: 15px;
@@ -1012,12 +1012,17 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   border-right: none;
   border-left: 1px solid #dde1e8;
   box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-  min-width: 42px;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
 }
 .stat-th-right {
   background: #f3f4f7 !important;
   border-left: 1px solid rgba(0,0,0,0.06) !important;
   border-right: none !important;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
 }
 [data-theme="dark"] .stat-cell-right { border-left-color: rgba(255,255,255,0.07); box-shadow: -2px 0 8px rgba(0,0,0,0.3); }
 [data-theme="dark"] .stat-th-right   { border-left-color: rgba(255,255,255,0.06) !important; }
@@ -4091,7 +4096,7 @@ function renderTable() {
   ];
   const visStatCols = statCols.filter(c => settings.cols[c.key]);
   // Stat widths for sticky-right: rightmost col = right:0, next = right:STAT_WIDTH, etc.
-  const STAT_W = 42;
+  const STAT_W = 46;
 
   days.forEach(d => {
     const ds = dateStr(currentYear, currentMonth, d);
