@@ -8,21 +8,9 @@
 <!-- Firebase SDKs -->
 <!-- API-Key Pre-Loading (standalone, no Firebase dependency) -->
 <script>
-(function() {
-  try {
-    const _k = [
-      'c2stYW50LWFwaTAzLTNa', 'dGtlODdQZEVXNExkVzNi',
-      'eWRlUDRHVExDNGw0MkRE', 'RUgySnc0UmZKbzQxRFhC',
-      'MDNKdV9OdFVHZzF5cVFj', 'THRneFl5cERmaDFsZS1S',
-      'UTUtdXdZd3FRLUdNcjVR', 'd0FB'
-    ].join('');
-    if (!localStorage.getItem('dienstplan-ai-key')) {
-      localStorage.setItem('dienstplan-ai-key', atob(_k));
-    }
-  } catch(e) {}
-  // Expose a global flag so main script knows API key was attempted
-  window.__apiKeyLoaded = true;
-})();
+// API key is stored solely in localStorage (key: 'dienstplan-ai-key').
+// Enter it once via the KI-Planer → 🔑 input field – it is never stored in source.
+window.__apiKeyLoaded = true;
 </script>
 
 <!-- Firebase (dynamic import – failure is completely silent, app works offline) -->
@@ -931,16 +919,18 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   50%  { box-shadow: 0 0 0 calc(6px / var(--table-zoom)) rgba(239,68,68,0); transform: scale(1.25); }
   100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); transform: scale(1); }
 }
-/* Warn row: dot centered below day name */
-.warn-row {
+/* Warn dot: directly below day name */
+.warn-dot-row { display: flex; justify-content: center; margin: 1px 0; }
+/* Warn labels: at bottom of header cell */
+.warn-labels-row {
   display: flex;
   align-items: center;
   gap: calc(3px / var(--table-zoom));
   justify-content: center;
-  margin: 2px 0 1px;
   flex-wrap: wrap;
   max-width: 100%;
   overflow: hidden;
+  margin-top: 1px;
 }
 .warn-label {
   font-size: calc(8px / var(--table-zoom));
@@ -4123,14 +4113,15 @@ function renderTable() {
         const isCrit = cnt === 0;
         return `<span class="warn-label${isCrit ? ' critical' : ''}" title="${sid}: nur ${cnt} von mind. 2">${sid}:${cnt}</span>`;
       }).join('');
-      warnHTML = `<div class="warn-row"><div class="${dotClass}"></div>${labelsHTML}</div>`;
+      warnHTML = {dot: `<div class="${dotClass}"></div>`, labels: `<div class="warn-labels-row">${labelsHTML}</div>`};
     }
 
     thHTML += `<th class="${cls}"><div class="th-inner">
       <div class="th-day-num">${d}</div>
       <div class="th-day-name">${dayName}</div>
-      ${warnHTML}
+      ${warnHTML ? warnHTML.dot : ''}
       ${buildCoverageBars(ds, maxDayCount)}
+      ${warnHTML ? warnHTML.labels : ''}
     </div></th>`;
   });
   thHTML += '</tr>';
