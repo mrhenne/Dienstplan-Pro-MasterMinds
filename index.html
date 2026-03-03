@@ -956,13 +956,16 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   min-width: 155px;
   padding: 7px 10px 7px 14px;
   cursor: pointer;
-  /* Solid background — NO backdrop-filter (breaks stacking context) */
   background: #f7f8fa;
   position: sticky;
   left: 0;
   z-index: 8;
   border-right: 1.5px solid #dde1e8 !important;
   box-shadow: 4px 0 16px rgba(0,0,0,0.07);
+  /* vertical centering */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 [data-theme="dark"] .employee-cell {
   background: #1c1e26;
@@ -4161,7 +4164,7 @@ function renderTable() {
       ondragend="dragEnd(event)">`;
 
     const weBadge = emp.weGroup ? `<span class="we-badge ${emp.weGroup}" title="Wochenend-Gruppe ${emp.weGroup}">${emp.weGroup}</span>` : '';
-    const prefDot = emp.preferences ? `<span title="KI-Präferenz: ${escapeHTML(emp.preferences)}" style="color:#c084fc;font-size:9px;cursor:help">✦</span>` : '';
+    const prefDot = emp.preferences ? `<span title="KI-Präferenz: ${escapeHTML(emp.preferences)}" style="color:#c084fc;font-size:10px;cursor:help;flex-shrink:0;line-height:1">✦</span>` : '';
     tbHTML += `<td class="employee-cell emp-cell"
       onmouseenter="showEmpTooltip(event,'${emp.id}')"
       onmouseleave="hideEmpTooltip()"
@@ -4169,7 +4172,7 @@ function renderTable() {
       ondblclick="event.stopPropagation();openEditEmployee('${emp.id}')"
       oncontextmenu="handleEmpContextMenu(event,'${emp.id}')">
       ${emp.weGroup ? `<div class="emp-we-strip ${emp.weGroup}"></div>` : ''}
-      <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${weBadge}${prefDot}</div>
+      <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${prefDot}${weBadge}</div>
       <div class="emp-role">${emp.role}</div>
       <div class="emp-fill-hint">Doppelklick: Bearbeiten • Rechtsklick: Ausfüllen</div>
       <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
