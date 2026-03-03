@@ -872,7 +872,7 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
 [data-theme="dark"] #plan-table thead th { background: #1e2028 !important; color: rgba(255,255,255,0.65) !important; }
 
 .th-employee { min-width: 150px; align-items: flex-start !important; padding-left: 14px !important; }
-.col-stat { width: 46px; min-width: 46px; font-size: 11px; font-family: 'DM Mono', 'Courier New', monospace; }
+.col-stat { font-size: 11px; font-family: 'DM Mono', 'Courier New', monospace; }
 
 .th-day-num {
   font-size: 15px;
@@ -954,7 +954,7 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
 
 .employee-cell {
   min-width: 155px;
-  padding: 7px 10px 7px 14px;
+  padding: 0;
   cursor: pointer;
   background: #f7f8fa;
   position: sticky;
@@ -962,10 +962,18 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   z-index: 8;
   border-right: 1.5px solid #dde1e8 !important;
   box-shadow: 4px 0 16px rgba(0,0,0,0.07);
-  /* vertical centering */
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+.emp-cell-content {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px 7px 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
 }
 [data-theme="dark"] .employee-cell {
   background: #1c1e26;
@@ -1015,17 +1023,35 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   border-right: none;
   border-left: 1px solid #dde1e8;
   box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+  /* width enforced via .stat-cell-inner below – td ignores max-width in auto table-layout */
+  padding: 0 !important;
+  overflow: hidden;
+}
+.stat-cell-inner {
   width: 46px;
   min-width: 46px;
   max-width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 6px 2px;
+  box-sizing: border-box;
 }
 .stat-th-right {
   background: #f3f4f7 !important;
   border-left: 1px solid rgba(0,0,0,0.06) !important;
   border-right: none !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+/* th-inner inside right stat col: no own border-right, fixed width */
+.stat-th-right .th-inner {
   width: 46px;
   min-width: 46px;
   max-width: 46px;
+  border-right: none;
+  padding: 6px 2px;
 }
 [data-theme="dark"] .stat-cell-right { border-left-color: rgba(255,255,255,0.07); box-shadow: -2px 0 8px rgba(0,0,0,0.3); }
 [data-theme="dark"] .stat-th-right   { border-left-color: rgba(255,255,255,0.06) !important; }
@@ -1987,10 +2013,10 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
 
 /* Weekend group row indicator strip */
 .emp-we-strip {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  border-radius: 0 2px 2px 0;
+  width: 4px;
+  flex-shrink: 0;
+  align-self: stretch;
+  border-radius: 0 3px 3px 0;
 }
 .emp-we-strip.A { background: linear-gradient(180deg,#2563eb,#3b82f6); }
 .emp-we-strip.B { background: linear-gradient(180deg,#059669,#10b981); }
@@ -4172,10 +4198,12 @@ function renderTable() {
       ondblclick="event.stopPropagation();openEditEmployee('${emp.id}')"
       oncontextmenu="handleEmpContextMenu(event,'${emp.id}')">
       ${emp.weGroup ? `<div class="emp-we-strip ${emp.weGroup}"></div>` : ''}
-      <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${prefDot}${weBadge}</div>
-      <div class="emp-role">${emp.role}</div>
-      <div class="emp-fill-hint">Doppelklick: Bearbeiten • Rechtsklick: Ausfüllen</div>
-      <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      <div class="emp-cell-content">
+        <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${prefDot}${weBadge}</div>
+        <div class="emp-role">${emp.role}</div>
+        <div class="emp-fill-hint">Doppelklick: Bearbeiten • Rechtsklick: Ausfüllen</div>
+        <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
     </td>`;
 
     // stat cells are rendered AFTER day cells (see below)
@@ -4353,7 +4381,7 @@ Ruhezeit: nur ~${hoursStr}h statt mind. 11h`;
       let cls = 'stat-cell stat-cell-right';
       if (col.key === 'diff') cls += ' ' + diffClass;
       if (col.key === 'vz')   cls += ' stat-vz';
-      tbHTML += `<td class="${cls}" style="position:sticky;right:${r}px">${statVals[col.key]}</td>`;
+      tbHTML += `<td class="${cls}" style="position:sticky;right:${r}px"><div class="stat-cell-inner">${statVals[col.key]}</div></td>`;
     });
 
     tbHTML += '</tr>';
