@@ -859,14 +859,14 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
 }
 
 .th-inner {
-  padding: 6px 5px;
+  padding: 6px 4px 5px;
   border-right: 1px solid rgba(0,0,0,0.06);
   min-height: 60px;
   height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 1px;
 }
 
@@ -914,7 +914,6 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   max-width: 14px; max-height: 14px;
   border-radius: 50%;
   background: #f59e0b;
-  margin-top: 1px;
   flex-shrink: 0;
   animation: warnPulse 1.4s ease-in-out infinite;
 }
@@ -932,13 +931,13 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   50%  { box-shadow: 0 0 0 calc(6px / var(--table-zoom)) rgba(239,68,68,0); transform: scale(1.25); }
   100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); transform: scale(1); }
 }
-/* Warn row: dot + labels inline */
+/* Warn row: dot centered below day name */
 .warn-row {
   display: flex;
   align-items: center;
   gap: calc(3px / var(--table-zoom));
   justify-content: center;
-  margin-top: 2px;
+  margin: 2px 0 1px;
   flex-wrap: wrap;
   max-width: 100%;
   overflow: hidden;
@@ -991,7 +990,24 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
 }
 .employee-cell:hover { background: #edf7f5; }
 [data-theme="dark"] .employee-cell:hover { background: #22282e; }
-.emp-name { font-weight: 700; font-size: 12px; color: var(--text); letter-spacing: 0.1px; }
+.emp-name {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text);
+  letter-spacing: 0.1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.emp-name-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+.emp-name .we-badge { flex-shrink: 0; }
 [data-theme="dark"] .emp-name { color: #e8eaed; }
 .emp-role  { font-size: 9.5px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1px; }
 [data-theme="dark"] .emp-role { color: #6b7280; }
@@ -1633,40 +1649,39 @@ body.wish-mode-on #wish-mode-btn { background: rgba(22,163,74,0.12) !important; 
 .multi-sel-action.danger:hover { background: rgba(239,68,68,0.15); }
 .multi-sel-action.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; }
 
-/* Header button rich tooltips */
+/* Header button rich tooltips – JS-driven, fixed position */
 .header-btn { position: relative; }
-.header-btn[data-tip]:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(8,10,24,0.97);
-  color: rgba(255,255,255,0.88);
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1.55;
-  white-space: pre;
-  padding: 8px 12px;
-  border-radius: 9px;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-  z-index: 9999;
+#header-tip {
+  position: fixed;
+  background: rgba(12,14,26,0.96);
+  color: rgba(255,255,255,0.92);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  white-space: nowrap;
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+  z-index: 99999;
   pointer-events: none;
-  min-width: 160px;
-  max-width: 280px;
-  text-align: left;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  max-width: 260px;
 }
-.header-btn[data-tip]:hover::before {
+#header-tip::before {
   content: '';
   position: absolute;
-  top: calc(100% + 3px);
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-bottom-color: rgba(8,10,24,0.97);
-  z-index: 9999;
-  pointer-events: none;
+  border-bottom-color: rgba(12,14,26,0.96);
+}
+#header-tip.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Row clear button (shown on row hover) */
@@ -2868,6 +2883,9 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
 
 <body data-theme="light">
 
+<!-- HEADER TOOLTIP -->
+<div id="header-tip"></div>
+
 <!-- LOADING -->
 <div id="loading">
   <div class="spinner"></div>
@@ -3792,25 +3810,33 @@ function showDeptMenu(e, deptId) {
   e.preventDefault(); e.stopPropagation();
   if (_deptMenuEl) { _deptMenuEl.remove(); _deptMenuEl = null; }
   const menu = document.createElement('div');
-  menu.style.cssText = 'position:fixed;left:' + Math.min(e.clientX, window.innerWidth - 210) + 'px;top:' + (e.clientY + 4) + 'px;z-index:9000;'
-    + 'background:rgba(14,16,34,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:10px;'
-    + 'padding:5px 0;box-shadow:0 8px 32px rgba(0,0,0,0.55);min-width:208px;backdrop-filter:blur(16px)';
+  menu.style.cssText = 'position:fixed;left:' + Math.min(e.clientX, window.innerWidth - 220) + 'px;top:' + (e.clientY + 4) + 'px;z-index:9000;'
+    + 'background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);'
+    + 'padding:5px 0;box-shadow:var(--shadow-lg);min-width:220px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)';
+
+  const SVG_RENAME  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  const SVG_COLOR   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>';
+  const SVG_EXPORT  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const SVG_ARCHIVE2= '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><line x1="10" y1="14" x2="14" y2="14"/></svg>';
+  const SVG_TRASH2  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
   const items = [
-    ['\u270f\ufe0f Umbenennen', 'renameDept(\'' + deptId + '\')'],
-    ['\ud83c\udfa8 Farbe \u00e4ndern', 'changeDeptColor(\'' + deptId + '\')'],
+    [SVG_RENAME,  'Umbenennen',                     'renameDept(\'' + deptId + '\')'],
+    [SVG_COLOR,   'Farbe \u00e4ndern',               'changeDeptColor(\'' + deptId + '\')'],
     null,
-    ['\u2b07 Abteilung exportieren (.dpz)', 'exportDept(\'' + deptId + '\')'],
-    ['\ud83d\udce6 Archiv \u00f6ffnen', 'openModal(\'modal-io\')'],
+    [SVG_EXPORT,  'Abteilung exportieren (.dpz)',    'exportDept(\'' + deptId + '\')'],
+    [SVG_ARCHIVE2,'Archiv \u00f6ffnen',              'openModal(\'modal-io\')'],
     null,
-    ['\ud83d\uddd1\ufe0f Abteilung l\u00f6schen', 'deleteDept(\'' + deptId + '\')', '#f87171'],
+    [SVG_TRASH2,  'Abteilung l\u00f6schen',          'deleteDept(\'' + deptId + '\')', '#ef4444'],
   ];
   items.forEach(item => {
     if (!item) { const d = document.createElement('div'); d.className = 'ctx-divider'; menu.appendChild(d); return; }
     const el = document.createElement('div');
     el.className = 'ctx-item';
-    el.textContent = item[0];
-    if (item[2]) el.style.color = item[2];
-    el.onclick = () => { menu.remove(); _deptMenuEl = null; new Function(item[1])(); };
+    el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.gap = '8px';
+    el.innerHTML = item[0] + '<span>' + item[1] + '</span>';
+    if (item[3]) { el.style.color = item[3]; el.querySelector('svg').style.stroke = item[3]; }
+    el.onclick = () => { menu.remove(); _deptMenuEl = null; new Function(item[2])(); };
     menu.appendChild(el);
   });
   document.body.appendChild(menu);
@@ -4103,8 +4129,8 @@ function renderTable() {
     thHTML += `<th class="${cls}"><div class="th-inner">
       <div class="th-day-num">${d}</div>
       <div class="th-day-name">${dayName}</div>
-      ${buildCoverageBars(ds, maxDayCount)}
       ${warnHTML}
+      ${buildCoverageBars(ds, maxDayCount)}
     </div></th>`;
   });
   thHTML += '</tr>';
@@ -4145,7 +4171,7 @@ function renderTable() {
       ondblclick="event.stopPropagation();openEditEmployee('${emp.id}')"
       oncontextmenu="handleEmpContextMenu(event,'${emp.id}')">
       ${emp.weGroup ? `<div class="emp-we-strip ${emp.weGroup}"></div>` : ''}
-      <div class="emp-name" style="display:flex;align-items:center;gap:5px">${emp.name} ${weBadge} ${prefDot}</div>
+      <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${weBadge}${prefDot}</div>
       <div class="emp-role">${emp.role}</div>
       <div class="emp-fill-hint">Doppelklick: Bearbeiten • Rechtsklick: Ausfüllen</div>
       <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
@@ -7273,6 +7299,48 @@ function _syncCustomShortcutsFromDOM() {
 }
 
 init();
+
+// ── Header Button Tooltips (position:fixed, escapes overflow clipping) ──────
+(function() {
+  const tip = document.getElementById('header-tip');
+  let _tipTimer = null;
+
+  function showTip(btn) {
+    const text = btn.dataset.tip;
+    if (!text || !tip) return;
+    clearTimeout(_tipTimer);
+    tip.textContent = text;
+    const rect = btn.getBoundingClientRect();
+    // Position below center of button
+    let left = rect.left + rect.width / 2;
+    tip.style.left = '0px'; tip.style.top = '0px'; // reset to measure
+    tip.style.visibility = 'hidden'; tip.classList.add('visible');
+    const tw = tip.offsetWidth;
+    tip.classList.remove('visible'); tip.style.visibility = '';
+    // Clamp horizontally
+    left = Math.max(8, Math.min(left - tw/2, window.innerWidth - tw - 8));
+    tip.style.left = left + 'px';
+    tip.style.top  = (rect.bottom + 8) + 'px';
+    _tipTimer = setTimeout(() => tip.classList.add('visible'), 40);
+  }
+
+  function hideTip() {
+    clearTimeout(_tipTimer);
+    _tipTimer = setTimeout(() => tip.classList.remove('visible'), 60);
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    const btn = e.target.closest('[data-tip]');
+    if (btn) showTip(btn);
+  });
+  document.addEventListener('mouseout', function(e) {
+    const btn = e.target.closest('[data-tip]');
+    if (btn) hideTip();
+  });
+  document.addEventListener('click', function() { hideTip(); });
+  document.addEventListener('scroll', function() { tip.classList.remove('visible'); }, true);
+})();
+
 </script>
 
 <!-- Multi-selection floating action bar -->
