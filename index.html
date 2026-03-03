@@ -854,8 +854,8 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 1px;
+  justify-content: center;
+  gap: 2px;
 }
 
 #plan-table thead th {
@@ -903,6 +903,7 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   border-radius: 50%;
   background: #f59e0b;
   flex-shrink: 0;
+  cursor: help;
   animation: warnPulse 1.4s ease-in-out infinite;
 }
 .warn-dot.critical {
@@ -921,17 +922,7 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
 }
 /* Warn dot: directly below day name */
 .warn-dot-row { display: flex; justify-content: center; margin: 1px 0; }
-/* Warn labels: at bottom of header cell */
-.warn-labels-row {
-  display: flex;
-  align-items: center;
-  gap: calc(3px / var(--table-zoom));
-  justify-content: center;
-  flex-wrap: wrap;
-  max-width: 100%;
-  overflow: hidden;
-  margin-top: 1px;
-}
+
 .warn-label {
   font-size: calc(8px / var(--table-zoom));
   font-weight: 800;
@@ -1016,6 +1007,21 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   border-right: 1px solid #dde1e8;
   box-shadow: 2px 0 8px rgba(0,0,0,0.04);
 }
+/* Stat cells on the RIGHT side */
+.stat-cell-right {
+  border-right: none;
+  border-left: 1px solid #dde1e8;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+  min-width: 42px;
+}
+.stat-th-right {
+  background: #f3f4f7 !important;
+  border-left: 1px solid rgba(0,0,0,0.06) !important;
+  border-right: none !important;
+}
+[data-theme="dark"] .stat-cell-right { border-left-color: rgba(255,255,255,0.07); box-shadow: -2px 0 8px rgba(0,0,0,0.3); }
+[data-theme="dark"] .stat-th-right   { border-left-color: rgba(255,255,255,0.06) !important; }
+.footer-stat-empty { background: var(--glass2) !important; border-top: 1.5px solid var(--border); }
 [data-theme="dark"] .stat-cell {
   background: #1c1e26;
   color: #9aa4c0;
@@ -4076,7 +4082,6 @@ function renderTable() {
   let thHTML = '<tr>';
   thHTML += `<th class="stat-th emp-th" style="left:0"><div class="th-inner th-employee" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Mitarbeiter</div></th>`;
 
-  let statLeft = 150;
   const statCols = [
     {key:'vz', label:'VZ'},
     {key:'soll', label:'Soll'},
@@ -4084,11 +4089,9 @@ function renderTable() {
     {key:'diff', label:'+/−'},
     {key:'vmt', label:'Vmt'},
   ];
-  statCols.forEach(col => {
-    if (!settings.cols[col.key]) return;
-    thHTML += `<th class="stat-th" style="left:${statLeft}px"><div class="th-inner col-stat">${col.label}</div></th>`;
-    statLeft += 38;
-  });
+  const visStatCols = statCols.filter(c => settings.cols[c.key]);
+  // Stat widths for sticky-right: rightmost col = right:0, next = right:STAT_WIDTH, etc.
+  const STAT_W = 42;
 
   days.forEach(d => {
     const ds = dateStr(currentYear, currentMonth, d);
@@ -4108,12 +4111,11 @@ function renderTable() {
     if (missingShifts.length > 0) {
       const hasCritical = missingShifts.some(sid => (dayCounts[ds][sid] || 0) === 0);
       const dotClass = hasCritical ? 'warn-dot critical' : 'warn-dot';
-      const labelsHTML = missingShifts.map(sid => {
+      const warnTip = missingShifts.map(sid => {
         const cnt = dayCounts[ds][sid] || 0;
-        const isCrit = cnt === 0;
-        return `<span class="warn-label${isCrit ? ' critical' : ''}" title="${sid}: nur ${cnt} von mind. 2">${sid}:${cnt}</span>`;
-      }).join('');
-      warnHTML = {dot: `<div class="${dotClass}"></div>`, labels: `<div class="warn-labels-row">${labelsHTML}</div>`};
+        return `${sid}: ${cnt} / ${MIN_STAFF}`;
+      }).join('  |  ');
+      warnHTML = {dot: `<div class="${dotClass} warn-dot-tip" data-tip="Unterbesetzt:\n${warnTip}"></div>`, labels: ''};
     }
 
     thHTML += `<th class="${cls}"><div class="th-inner">
@@ -4121,20 +4123,20 @@ function renderTable() {
       <div class="th-day-name">${dayName}</div>
       ${warnHTML ? warnHTML.dot : ''}
       ${buildCoverageBars(ds, maxDayCount)}
-      ${warnHTML ? warnHTML.labels : ''}
     </div></th>`;
+  });
+  // Stat headers on the right (sticky-right)
+  visStatCols.slice().reverse().forEach((col, i) => {
+    const r = i * STAT_W;
+    thHTML += `<th class="stat-th stat-th-right" style="right:${r}px;position:sticky;z-index:16"><div class="th-inner col-stat">${col.label}</div></th>`;
   });
   thHTML += '</tr>';
   thead.innerHTML = thHTML;
 
-  // --- Compute sticky left positions ---
-  const EMP_WIDTH = 150;
-  const STAT_WIDTH = 44;
-  let stickyLeftAcc = EMP_WIDTH;
-  const statLeftMap = {};
-  statCols.forEach(col => {
-    statLeftMap[col.key] = stickyLeftAcc;
-    if (settings.cols[col.key]) stickyLeftAcc += STAT_WIDTH;
+  // --- Compute sticky RIGHT positions for stat cells ---
+  const statRightMap = {};
+  visStatCols.slice().reverse().forEach((col, i) => {
+    statRightMap[col.key] = i * STAT_W;
   });
 
   // --- TBODY ---
@@ -4168,12 +4170,7 @@ function renderTable() {
       <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
     </td>`;
 
-    if (settings.cols.vz)   tbHTML += `<td class="stat-cell stat-vz" style="position:sticky;left:${statLeftMap.vz}px">${emp.vz}%</td>`;
-    if (settings.cols.soll) tbHTML += `<td class="stat-cell" style="position:sticky;left:${statLeftMap.soll}px">${soll}</td>`;
-    if (settings.cols.ist)  tbHTML += `<td class="stat-cell" style="position:sticky;left:${statLeftMap.ist}px">${ist}</td>`;
-    if (settings.cols.diff) tbHTML += `<td class="stat-cell ${diffClass}" style="position:sticky;left:${statLeftMap.diff}px">${diffSign}${diff}</td>`;
-    if (settings.cols.vmt)  tbHTML += `<td class="stat-cell" style="position:sticky;left:${statLeftMap.vmt}px">${emp.vmt||0}</td>`;
-
+    // stat cells are rendered AFTER day cells (see below)
     days.forEach(d => {
       const ds = dateStr(currentYear, currentMonth, d);
       const wknd = isWeekend(currentYear, currentMonth, d);
@@ -4335,6 +4332,22 @@ Ruhezeit: nur ~${hoursStr}h statt mind. 11h`;
         >${inner}${wishOverlay}</td>`;
     });
 
+    // Stat cells on the RIGHT (sticky-right)
+    const statVals = {
+      vz:   emp.vz + '%',
+      soll: soll,
+      ist:  ist,
+      diff: diffSign + diff,
+      vmt:  emp.vmt || 0,
+    };
+    visStatCols.slice().reverse().forEach((col, i) => {
+      const r = i * STAT_W;
+      let cls = 'stat-cell stat-cell-right';
+      if (col.key === 'diff') cls += ' ' + diffClass;
+      if (col.key === 'vz')   cls += ' stat-vz';
+      tbHTML += `<td class="${cls}" style="position:sticky;right:${r}px">${statVals[col.key]}</td>`;
+    });
+
     tbHTML += '</tr>';
   });
   tbody.innerHTML = tbHTML;
@@ -4352,10 +4365,9 @@ Ruhezeit: nur ~${hoursStr}h statt mind. 11h`;
   const footShifts = shiftTypes.filter(st => settings.footerShifts[st.id] !== false);
   let tfHTML = '';
   footShifts.forEach(st => {
-    const visStatCols2 = statCols.filter(c => settings.cols[c.key]);
-    const fColspan = 1 + visStatCols2.length;
     tfHTML += `<tr class="footer-row">`;
-    tfHTML += `<td colspan="${fColspan}"><div class="footer-label">
+    // Employee label cell only (stats are on the right now)
+    tfHTML += `<td><div class="footer-label">
       <span style="display:inline-block;width:22px;height:18px;border-radius:4px;background:${st.bg};color:${st.color};font-size:9px;font-weight:700;text-align:center;line-height:18px;font-family:'DM Mono','Courier New',monospace">${st.label}</span>
       ${st.name}
     </div></td>`;
@@ -4368,6 +4380,8 @@ Ruhezeit: nur ~${hoursStr}h statt mind. 11h`;
       });
       tfHTML += `<td class="footer-count${count===0?' zero':''}">${count}</td>`;
     });
+    // Empty stat cells on the right
+    visStatCols.forEach(() => { tfHTML += `<td class="stat-cell stat-cell-right footer-stat-empty"></td>`; });
     tfHTML += '</tr>';
   });
   tfoot.innerHTML = tfHTML;
