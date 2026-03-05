@@ -962,9 +962,14 @@ body.has-unsaved .save-btn .unsaved-dot { display: block; }
   z-index: 8;
   border-right: 1.5px solid #dde1e8 !important;
   box-shadow: 4px 0 16px rgba(0,0,0,0.07);
+  /* Do NOT set display:flex on <td> – breaks sticky in Firefox/Safari */
+}
+/* Inner row wrapper handles the flex layout */
+.emp-cell-row {
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  height: 100%;
 }
 .emp-cell-content {
   flex: 1;
@@ -2965,6 +2970,18 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
   <div class="ctx-item" id="ctx-paste" style="opacity:0.4"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Dienst einfügen <span style="float:right;opacity:0.45;font-size:10px">Ctrl+V</span></div>
   <div class="ctx-item" id="ctx-swap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg> Zum Tauschen ausschreiben</div>
   <div class="ctx-divider"></div>
+  <div class="ctx-color-label">Tagfarbe</div>
+  <div class="ctx-color-row" id="ctx-color-row">
+    <div class="ctx-color-swatch clear" data-cc="" title="Farbe entfernen">✕</div>
+    <div class="ctx-color-swatch" data-cc="#4ade80" style="background:#4ade80" title="Grün"></div>
+    <div class="ctx-color-swatch" data-cc="#facc15" style="background:#facc15" title="Gelb"></div>
+    <div class="ctx-color-swatch" data-cc="#f97316" style="background:#f97316" title="Orange"></div>
+    <div class="ctx-color-swatch" data-cc="#ef4444" style="background:#ef4444" title="Rot"></div>
+    <div class="ctx-color-swatch" data-cc="#60a5fa" style="background:#60a5fa" title="Blau"></div>
+    <div class="ctx-color-swatch" data-cc="#c084fc" style="background:#c084fc" title="Lila"></div>
+    <div class="ctx-color-swatch" data-cc="#5BBFB5" style="background:#5BBFB5" title="Teal"></div>
+  </div>
+  <div class="ctx-divider"></div>
   <div class="ctx-item" id="ctx-clear" style="color:#ef4444"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Dienst löschen</div>
 </div>
 
@@ -3063,6 +3080,7 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
     <button class="header-btn" onclick="openModal('modal-settings')" data-tip="Einstellungen"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <button class="header-btn h-hide-compact" id="theme-btn" onclick="toggleTheme()" data-tip="Dark / Light Mode"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
 
+    <button class="header-btn" id="month-notes-btn" onclick="openMonthNotes()" data-tip="Monatsnotiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="mnb-btn-dot" id="mnb-btn-dot"></span></button>
     <div class="header-sep"></div>
 
     <button class="export-btn h-hide-compact" onclick="printPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> PDF</button>
@@ -3121,6 +3139,37 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
       <input id="emp-filter-input" type="text" placeholder="🔍 Mitarbeiter suchen…" oninput="applyEmpFilter(this.value)" autocomplete="off">
       <span class="filter-badge-count" id="filter-count"></span>
       <button style="margin-left:4px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--glass2);color:var(--text2);font-size:11px;cursor:pointer" onclick="applyEmpFilter('');document.getElementById('emp-filter-input').value=''">✕ Löschen</button>
+    </div>
+    <!-- Month Notes Modal -->
+    <div class="modal-overlay" id="modal-month-notes" onclick="if(event.target===this)closeMonthNotes()">
+      <div class="modal" style="min-width:min(520px,96vw)">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Monatsnotiz – <span id="mnb-modal-month"></span>
+          <button class="modal-close" onclick="closeMonthNotes()">✕</button>
+        </div>
+        <div class="form-row">
+          <label>Notiz</label>
+          <textarea id="mnb-text" rows="6" placeholder="Wichtige Infos für diesen Monat…&#10;z.B. Urlaubssperren, Schulungen, Personalengpässe, Übergaben…" style="min-height:130px"></textarea>
+        </div>
+        <div class="form-row">
+          <label>Farbe / Priorität</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="mnb-color-picker">
+            <button class="mnb-color-opt" data-color="" title="Keine">–</button>
+            <button class="mnb-color-opt" data-color="#4ade80" title="Grün – Alles ok" style="background:#4ade80"></button>
+            <button class="mnb-color-opt" data-color="#facc15" title="Gelb – Achtung" style="background:#facc15"></button>
+            <button class="mnb-color-opt" data-color="#f97316" title="Orange – Wichtig" style="background:#f97316"></button>
+            <button class="mnb-color-opt" data-color="#ef4444" title="Rot – Dringend" style="background:#ef4444"></button>
+            <button class="mnb-color-opt" data-color="#60a5fa" title="Blau – Info" style="background:#60a5fa"></button>
+            <button class="mnb-color-opt" data-color="#c084fc" title="Lila – KI / Besonders" style="background:#c084fc"></button>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-danger" onclick="clearMonthNotes()">Löschen</button>
+          <button class="btn btn-secondary" onclick="closeMonthNotes()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="saveMonthNotes()">Speichern</button>
+        </div>
+      </div>
     </div>
     <!-- Focus-mode Banner -->
     <div class="focus-banner" id="focus-banner">
@@ -3599,7 +3648,9 @@ let selectedShift = 'FD';
 let contextTarget = null;
 let focusEmpId    = null;
 let panModeActive = false;
-let wishes    = {};
+let wishes     = {};
+let monthNotes = {}; // monthNotes[YYYY-MM] = {text, pinColor}
+let cellColors = {}; // cellColors[empId][ds] = '#hexcolor'
 let wishMode  = false;
 let cellClipboard  = null;
 let navCell        = null;
@@ -3725,18 +3776,22 @@ function currentDept() {
   return departments.find(d => d.id === currentDeptId) || departments[0];
 }
 function saveDeptState(dept) {
-  dept.employees  = JSON.parse(JSON.stringify(employees));
-  dept.shifts     = JSON.parse(JSON.stringify(shifts));
-  dept.shiftTypes = JSON.parse(JSON.stringify(shiftTypes));
-  dept.settings   = JSON.parse(JSON.stringify(settings));
-  dept.wishes     = JSON.parse(JSON.stringify(wishes));
+  dept.employees   = JSON.parse(JSON.stringify(employees));
+  dept.shifts      = JSON.parse(JSON.stringify(shifts));
+  dept.shiftTypes  = JSON.parse(JSON.stringify(shiftTypes));
+  dept.settings    = JSON.parse(JSON.stringify(settings));
+  dept.wishes      = JSON.parse(JSON.stringify(wishes));
+  dept.monthNotes  = JSON.parse(JSON.stringify(monthNotes));
+  dept.cellColors  = JSON.parse(JSON.stringify(cellColors));
 }
 function loadDeptState(dept) {
-  employees  = JSON.parse(JSON.stringify(dept.employees  || DEFAULT_EMPLOYEES));
-  shifts     = JSON.parse(JSON.stringify(dept.shifts     || {}));
-  shiftTypes = JSON.parse(JSON.stringify(dept.shiftTypes || DEFAULT_SHIFT_TYPES));
-  wishes     = JSON.parse(JSON.stringify(dept.wishes     || {}));
-  settings   = Object.assign(
+  employees   = JSON.parse(JSON.stringify(dept.employees  || DEFAULT_EMPLOYEES));
+  shifts      = JSON.parse(JSON.stringify(dept.shifts     || {}));
+  shiftTypes  = JSON.parse(JSON.stringify(dept.shiftTypes || DEFAULT_SHIFT_TYPES));
+  wishes      = JSON.parse(JSON.stringify(dept.wishes     || {}));
+  monthNotes  = JSON.parse(JSON.stringify(dept.monthNotes || {}));
+  cellColors  = JSON.parse(JSON.stringify(dept.cellColors || {}));
+  settings    = Object.assign(
     { cols:{vz:true,soll:true,ist:true,diff:true,vmt:true}, footerShifts:{}, hourFactor:7.7 },
     JSON.parse(JSON.stringify(dept.settings || {}))
   );
@@ -3756,6 +3811,7 @@ function switchDept(id) {
   clearUnsaved();
   renderDeptTabs();
   render();
+  renderMonthNotes();
   showToast('\ud83d\udcc2 ' + dept.name);
 }
 
@@ -4197,12 +4253,14 @@ function renderTable() {
       onclick="toggleFocusMode('${emp.id}')"
       ondblclick="event.stopPropagation();openEditEmployee('${emp.id}')"
       oncontextmenu="handleEmpContextMenu(event,'${emp.id}')">
-      ${emp.weGroup ? `<div class="emp-we-strip ${emp.weGroup}"></div>` : ''}
-      <div class="emp-cell-content">
-        <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${prefDot}${weBadge}</div>
-        <div class="emp-role">${emp.role}</div>
-        <div class="emp-fill-hint">Doppelklick: Bearbeiten • Rechtsklick: Ausfüllen</div>
-        <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      <div class="emp-cell-row">
+        ${emp.weGroup ? `<div class="emp-we-strip ${emp.weGroup}"></div>` : ''}
+        <div class="emp-cell-content">
+          <div class="emp-name"><span class="emp-name-text">${emp.name}</span>${prefDot}${weBadge}</div>
+          <div class="emp-role">${emp.role}</div>
+          <div class="emp-fill-hint">Doppelklick: Bearbeiten • Rechtsklick: Ausfüllen</div>
+          <button class="row-clear-btn" title="Monat leeren" onclick="event.stopPropagation();clearEmployeeMonth('${emp.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
       </div>
     </td>`;
 
@@ -4358,14 +4416,18 @@ Ruhezeit: nur ~${hoursStr}h statt mind. 11h`;
       // Conflict: shift assigned on a blocked day
       const wishConflict = empWish?.type === 'block' && hasShift ? ' wish-conflict' : '';
 
-      tbHTML += `<td class="${cls}${hasNote?' has-note':''}${(!hasShift&&hasNote)?' note-only-cell':''}${wishConflict}"
+      const _cc = cellColors[emp.id]?.[ds];
+      const _ccStyle = _cc ? `background:${_cc}22;` : '';
+      const _ccCls = _cc ? ' cell-colored' : '';
+      tbHTML += `<td class="${cls}${hasNote?' has-note':''}${(!hasShift&&hasNote)?' note-only-cell':''}${wishConflict}${_ccCls}"
         data-ds="${ds}"
+        style="${_ccStyle}"
         onclick="wishMode ? handleWishClick(event,'${emp.id}','${ds}') : handleCellSingleClick(event,'${emp.id}','${ds}')"
         ondblclick="wishMode ? null : handleCellDblClick(event,'${emp.id}','${ds}')"
         oncontextmenu="wishMode ? handleWishClick(event,'${emp.id}','${ds}') : handleContextMenu(event,'${emp.id}','${ds}')"
         onmousedown="if(!wishMode && !panModeActive) handleCellMouseDown(event,'${emp.id}','${ds}')"
         onmouseenter="handleCellMouseEnter(event,'${emp.id}','${ds}')"
-        >${inner}${wishOverlay}</td>`;
+        >${inner}${_cc ? `<div style="position:absolute;inset:0;border-radius:inherit;border:2px solid ${_cc};pointer-events:none;opacity:0.45"></div>` : ''}${wishOverlay}</td>`;
     });
 
     // Stat cells on the RIGHT (sticky-right)
@@ -4958,6 +5020,7 @@ function changeMonth(delta) {
   if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
   currentWeek = 1;
   render();
+  renderMonthNotes();
 }
 
 function changeWeek(delta) {
@@ -5615,6 +5678,7 @@ function loadLocal() {
         currentDeptId = d.currentDeptId && departments.find(x => x.id === d.currentDeptId)
           ? d.currentDeptId : departments[0].id;
         loadDeptState(currentDept());
+        setTimeout(renderMonthNotes, 50);
         if (d.darkMode !== undefined) {
           darkMode = d.darkMode;
           document.body.dataset.theme = darkMode ? 'dark' : 'light';
@@ -7340,6 +7404,119 @@ function _syncCustomShortcutsFromDOM() {
 }
 
 init();
+
+
+// =============================================================================
+// MONTH NOTES
+// =============================================================================
+let _mnbSelectedColor = '';
+
+function renderMonthNotes() {
+  const key  = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+  const note = monthNotes[key] || null;
+  const btn  = document.getElementById('month-notes-btn');
+  const dot  = document.getElementById('mnb-btn-dot');
+  if (!btn) return;
+  if (note && note.text && note.text.trim()) {
+    btn.classList.add('has-note');
+    if (dot) {
+      dot.style.background = note.pinColor || 'var(--teal)';
+      dot.style.display = 'block';
+    }
+    btn.title = '📝 ' + note.text.slice(0, 60) + (note.text.length > 60 ? '…' : '');
+  } else {
+    btn.classList.remove('has-note');
+    if (dot) dot.style.display = 'none';
+    btn.title = 'Monatsnotiz';
+  }
+}
+
+function openMonthNotes() {
+  const key = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+  const note = monthNotes[key] || {};
+  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const lbl = document.getElementById('mnb-modal-month');
+  if (lbl) lbl.textContent = months[currentMonth] + ' ' + currentYear;
+  const ta = document.getElementById('mnb-text');
+  if (ta) ta.value = note.text || '';
+  _mnbSelectedColor = note.pinColor || '';
+  // Update color picker active state
+  document.querySelectorAll('.mnb-color-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.color === _mnbSelectedColor);
+  });
+  document.getElementById('modal-month-notes').classList.add('visible');
+}
+
+function closeMonthNotes() {
+  document.getElementById('modal-month-notes').classList.remove('visible');
+}
+
+function saveMonthNotes() {
+  const key = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+  const text = (document.getElementById('mnb-text').value || '').trim();
+  if (text) {
+    monthNotes[key] = { text, pinColor: _mnbSelectedColor };
+  } else {
+    delete monthNotes[key];
+  }
+  closeMonthNotes();
+  renderMonthNotes();
+  markUnsaved();
+  saveLocal();
+}
+
+function clearMonthNotes() {
+  const key = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+  delete monthNotes[key];
+  closeMonthNotes();
+  renderMonthNotes();
+  markUnsaved();
+  saveLocal();
+}
+
+// Wire up color picker buttons in month notes modal
+document.querySelectorAll('.mnb-color-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _mnbSelectedColor = btn.dataset.color || '';
+    document.querySelectorAll('.mnb-color-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// =============================================================================
+// CELL COLOR PICKER (context menu swatches)
+// =============================================================================
+document.querySelectorAll('.ctx-color-swatch').forEach(sw => {
+  sw.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!contextTarget) return;
+    const { empId, ds } = contextTarget;
+    const color = sw.dataset.cc || '';
+    // Update cellColors
+    if (!cellColors[empId]) cellColors[empId] = {};
+    if (color) {
+      cellColors[empId][ds] = color;
+    } else {
+      delete cellColors[empId][ds];
+      if (!Object.keys(cellColors[empId]).length) delete cellColors[empId];
+    }
+    // Close context menu
+    document.getElementById('context-menu').classList.remove('visible');
+    markUnsaved();
+    render();
+  });
+});
+
+// Highlight current cell color in context menu when opened
+const _origUpdateCtx = window.updateContextMenuForTarget;
+window.updateContextMenuForTarget = function(empId, ds) {
+  if (_origUpdateCtx) _origUpdateCtx(empId, ds);
+  const currentColor = cellColors[empId]?.[ds] || '';
+  document.querySelectorAll('.ctx-color-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.cc === currentColor);
+  });
+};
+
 
 // ── Header Button Tooltips (position:fixed, escapes overflow clipping) ──────
 (function() {
