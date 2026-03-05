@@ -2916,6 +2916,21 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
   margin-bottom: 3px;
 }
 
+
+/* ── Save-to-file indicator ──────────────────────────────────────────────── */
+.save-btn.file-linked { background: linear-gradient(135deg,#1d9e8f,#0d7a6e); }
+.save-btn.file-linked::after {
+  content: '●';
+  position: absolute;
+  top: -4px; right: -4px;
+  font-size: 8px;
+  color: #4ade80;
+  background: #0f172a;
+  border-radius: 50%;
+  width: 10px; height: 10px;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 10px; text-align: center;
+}
 </style>
 </head>
 
@@ -3091,7 +3106,7 @@ td.we-off-b { background: rgba(5,150,105,0.04) !important; }
     <button class="ai-plan-btn" onclick="openModal('modal-ai')" title="KI-Dienstplanung">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> KI-Plan
     </button>
-    <button class="save-btn" onclick="saveAll()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Sichern<span class="unsaved-dot"></span></button>
+    <button class="save-btn" id="save-btn-main" onclick="saveAll()" oncontextmenu="event.preventDefault();saveAsNewFile()" title="Klick: Speichern • Rechtsklick: Anderen Speicherort wählen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Sichern<span class="unsaved-dot"></span></button>
 
     <button class="layout-toggle-btn" id="layout-toggle-btn" onclick="cycleLayout()" data-layout="desktop" title="Ansicht wechseln"></button>
     <button class="header-btn" id="overflow-drawer-btn" onclick="toggleOverflowDrawer()" title="Mehr" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg></button>
@@ -3653,7 +3668,8 @@ let contextTarget = null;
 let focusEmpId    = null;
 let panModeActive = false;
 let wishes     = {};
-let monthNotes = {}; // monthNotes[YYYY-MM] = {text, pinColor}
+let monthNotes = {};
+let _fileHandle = null; // File System Access API handle for direct overwrite save // monthNotes[YYYY-MM] = {text, pinColor}
 let cellColors = {}; // cellColors[empId][ds] = '#hexcolor'
 let wishMode  = false;
 let cellClipboard  = null;
@@ -5975,18 +5991,56 @@ function updateSyncBadge(online) {
   else        { badge.className = 'sync-badge offline'; text.textContent = 'Lokal'; }
 }
 
-async function saveAll() {
+async function saveAll(forceNewFile) {
   saveLocal(); // saves all depts + clears unsaved indicator
   const saved = await saveFirebase();
   updateSyncBadge(saved);
+
+  // ── File System Access API: overwrite local .html file ─────────────────
+  const fsSupported = 'showSaveFilePicker' in window;
+  if (fsSupported) {
+    try {
+      if (forceNewFile || !_fileHandle) {
+        _fileHandle = await window.showSaveFilePicker({
+          suggestedName: 'DienstplanPRO.html',
+          types: [{ description: 'HTML-Datei', accept: { 'text/html': ['.html'] } }],
+          startIn: 'desktop',
+        });
+        // Update button UI
+        const btn = document.querySelector('.save-btn');
+        if (btn) btn.classList.add('file-linked');
+      }
+      const writable = await _fileHandle.createWritable();
+      await writable.write(new Blob([document.documentElement.outerHTML], { type: 'text/html' }));
+      await writable.close();
+      const ts = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const name = _fileHandle.name || 'Datei';
+      showToast(`💾 ${name} gespeichert — ${ts}`);
+      const statusEl = document.getElementById('io-save-status');
+      if (statusEl) { statusEl.textContent = '✓ Datei gespeichert ' + ts; statusEl.style.color = '#34d399'; }
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') { /* user cancelled picker */ return; }
+      // Fall through to toast-only save on other errors
+      _fileHandle = null;
+      const btn = document.querySelector('.save-btn');
+      if (btn) btn.classList.remove('file-linked');
+    }
+  }
+
+  // ── Fallback: localStorage-only ────────────────────────────────────────
   const msg = saved ? '☁️ In Cloud gespeichert!' : '💾 Lokal gespeichert ✓';
   showToast(msg);
-  // Update status in modal-io if it's open
   const statusEl = document.getElementById('io-save-status');
   if (statusEl) {
     statusEl.textContent = '✓ Gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
     statusEl.style.color = '#34d399';
   }
+}
+
+async function saveAsNewFile() {
+  // Force new file picker even if handle exists
+  await saveAll(true);
 }
 
 // =============================================================================
